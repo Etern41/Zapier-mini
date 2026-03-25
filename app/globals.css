@@ -130,3 +130,9 @@
     box-shadow: var(--card-shadow);
   }
 }
+
+/* React Flow: default .react-flow__handle { pointer-events: none } lets clicks fall through to
+   the node — mousedown never starts a connection. !important wins if xyflow.css loads after globals. */
+.react-flow__node .react-flow__handle {
+  pointer-events: auto !important;
+}

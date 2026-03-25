@@ -88,11 +88,6 @@ export function NodeConfigPanel({
     }
   };
 
-  const handleDone = () => {
-    onSaved();
-    onClose();
-  };
-
   if (!open || !node) return null;
 
   const isTr = String(node.type).startsWith("TRIGGER");
@@ -200,11 +195,6 @@ export function NodeConfigPanel({
               />
             ) : null}
           </div>
-          <div className="shrink-0 border-t border-border bg-card p-3">
-            <Button type="button" className="w-full" onClick={handleDone}>
-              Сохранить
-            </Button>
-          </div>
         </TabsContent>
 
         <TabsContent
@@ -247,7 +237,7 @@ export function NodeConfigPanel({
             type="button"
             variant="secondary"
             className="mt-auto w-full"
-            onClick={handleDone}
+            onClick={onClose}
           >
             Закрыть панель
           </Button>

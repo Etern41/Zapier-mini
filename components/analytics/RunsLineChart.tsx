@@ -24,6 +24,7 @@ export function RunsLineChart({
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <Tooltip
+            isAnimationActive={false}
             formatter={(value) => [
               value == null ? "—" : Number(value),
               "Запуски",

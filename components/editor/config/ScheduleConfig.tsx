@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import { safeDebouncedConfig } from "@/lib/editor/debounced-config";
 import { patchNode } from "@/lib/editor/patch-node";
 
@@ -80,29 +81,37 @@ export function ScheduleConfig({
     const t = setTimeout(() => {
       const cfg = safeDebouncedConfig(debounceKey, scheduleConfigSchema);
       if (!cfg) return;
-      void patchNode(nodeId, { config: cfg }).then((ok) => {
-        if (ok) onSaved();
-      });
+      void patchNode(nodeId, { config: cfg });
     }, 500);
     return () => clearTimeout(t);
-  }, [debounceKey, nodeId, onSaved]);
+  }, [debounceKey, nodeId]);
 
   useEffect(() => {
     if (!workflowId) return;
-    void fetch(`/api/workflows/${workflowId}/runs`)
-      .then((r) => r.json())
-      .then((d: { runs?: { startedAt: string; trigger: string }[] }) => {
+    void (async () => {
+      try {
+        const r = await fetch(`/api/workflows/${workflowId}/runs`);
+        if (!r.ok) return;
+        const d = (await r.json()) as {
+          runs?: { startedAt: string; trigger: string }[];
+        };
         const list = (d.runs ?? [])
           .filter((x) => x.trigger === "schedule")
           .slice(0, 3);
         setLastRuns(list);
-      })
-      .catch(() => undefined);
+      } catch {
+        /* ignore */
+      }
+    })();
   }, [workflowId]);
 
   const expr = exprFor(values.frequency, values.cronCustom);
   const saveNow = handleSubmit(async (data) => {
-    await patchNode(nodeId, { config: data });
+    const ok = await patchNode(nodeId, { config: data });
+    if (!ok) {
+      toast.error("Не удалось сохранить настройки");
+      return;
+    }
     onSaved();
   });
 

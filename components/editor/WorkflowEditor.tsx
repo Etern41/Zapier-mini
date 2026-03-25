@@ -289,23 +289,34 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
     [wf, between, reload]
   );
 
-  const onDeleteNode = useCallback(
-    async (id: string) => {
-      if (!confirm("Удалить узел?")) return;
+  const removeNodesByIds = useCallback(
+    async (ids: string[], opts?: { optimistic?: boolean }) => {
+      if (ids.length === 0) return;
+      const optimistic = opts?.optimistic ?? false;
+      const idSet = new Set(ids);
       const prevWf = wf;
-      const nextNodes = wf.nodes.filter((n) => n.id !== id);
-      const nextEdges = wf.edges.filter(
-        (e) => e.sourceId !== id && e.targetId !== id
+      const nextNodes = prevWf.nodes.filter((n) => !idSet.has(n.id));
+      const nextEdges = prevWf.edges.filter(
+        (e) => !idSet.has(e.sourceId) && !idSet.has(e.targetId)
       );
       const afterOrders = reindexNodeOrders(nextNodes, nextEdges);
-      setWf({ ...wf, nodes: afterOrders, edges: nextEdges });
-      setSelectedId(null);
 
-      const res = await fetch(`/api/nodes/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (optimistic) {
+        setWf({ ...prevWf, nodes: afterOrders, edges: nextEdges });
+        setSelectedId((sid) => (sid && idSet.has(sid) ? null : sid));
+      }
+
+      const results = await Promise.all(
+        ids.map((id) => fetch(`/api/nodes/${id}`, { method: "DELETE" }))
+      );
+      const failRes = results.find((r) => !r.ok);
+      if (failRes) {
+        const j = (await failRes.json().catch(() => ({}))) as {
+          error?: string;
+        };
         toast.error(j.error ?? "Не удалось удалить узел");
-        setWf(prevWf);
+        if (optimistic) setWf(prevWf);
+        await reload();
         return;
       }
 
@@ -313,8 +324,89 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
         await patchOrderDiffs(prevWf.nodes, afterOrders);
       } catch {
         toast.error("Не удалось синхронизировать порядок");
+        if (optimistic) setWf(prevWf);
         await reload();
+        return;
       }
+
+      if (!optimistic) {
+        setWf({ ...prevWf, nodes: afterOrders, edges: nextEdges });
+        setSelectedId((sid) => (sid && idSet.has(sid) ? null : sid));
+      }
+    },
+    [wf, reload]
+  );
+
+  const onDeleteNode = useCallback(
+    (id: string) => {
+      if (!confirm("Удалить узел?")) return;
+      void removeNodesByIds([id], { optimistic: true });
+    },
+    [removeNodesByIds]
+  );
+
+  const onBeforeDelete = useCallback(
+    async ({
+      nodes: toRemove,
+    }: {
+      nodes: Node[];
+      edges: Edge[];
+    }) => {
+      const n = toRemove.length;
+      if (n === 0) return true;
+      const msg =
+        n === 1 ? "Удалить узел?" : `Удалить ${n} узлов?`;
+      return confirm(msg);
+    },
+    []
+  );
+
+  const onNodesDelete = useCallback(
+    (deleted: Node[]) => {
+      const ids = deleted.map((n) => n.id);
+      void removeNodesByIds(ids, { optimistic: false });
+    },
+    [removeNodesByIds]
+  );
+
+  const onEdgesDelete = useCallback(
+    (deleted: Edge[]) => {
+      if (deleted.length === 0) return;
+      const prevWf = wf;
+      const key = (s: string, t: string) => `${s}:${t}`;
+      const delSet = new Set(deleted.map((e) => key(e.source, e.target)));
+      const nextEdges = prevWf.edges.filter(
+        (e) => !delSet.has(key(e.sourceId, e.targetId))
+      );
+      const nextNodes = reindexNodeOrders(prevWf.nodes, nextEdges);
+
+      setWf({ ...prevWf, edges: nextEdges, nodes: nextNodes });
+
+      void (async () => {
+        for (const e of deleted) {
+          const res = await fetch(`/api/workflows/${wf.id}/edges`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sourceId: e.source,
+              targetId: e.target,
+            }),
+          });
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) {
+            toast.error(j.error ?? "Не удалось удалить связь");
+            setWf(prevWf);
+            await reload();
+            return;
+          }
+        }
+        try {
+          await patchOrderDiffs(prevWf.nodes, nextNodes);
+        } catch {
+          toast.error("Не удалось обновить порядок шагов");
+          await reload();
+        }
+      })();
     },
     [wf, reload]
   );
@@ -511,8 +603,16 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onNodeDragStop={onNodeDragStop}
+              onBeforeDelete={onBeforeDelete}
+              onNodesDelete={onNodesDelete}
+              onEdgesDelete={onEdgesDelete}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
+              nodesConnectable
+              edgesFocusable
+              connectOnClick
+              deleteKeyCode={["Backspace", "Delete"]}
+              defaultEdgeOptions={{ interactionWidth: 32 }}
               fitView
               className="h-full min-h-[400px]"
             >

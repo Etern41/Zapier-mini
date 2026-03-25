@@ -22,6 +22,7 @@ export function ButtonEdge({
   targetPosition,
   markerEnd,
   data,
+  interactionWidth = 32,
 }: EdgeProps & { data?: ButtonEdgeData }) {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -38,6 +39,7 @@ export function ButtonEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={interactionWidth}
         style={{
           stroke: "#7C3AED",
           strokeWidth: 2,

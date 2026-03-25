@@ -28,6 +28,7 @@ export function WorkflowBarChart({
           <XAxis dataKey="label" tick={{ fontSize: 10 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <Tooltip
+            isAnimationActive={false}
             formatter={(value) => [
               value == null ? "—" : Number(value),
               "Запуски",

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Play, MoreVertical } from "lucide-react";
 import {
@@ -25,42 +25,49 @@ export type ActionNodeData = {
 function ActionNodeInner({ data, selected }: NodeProps) {
   const d = data as ActionNodeData;
   const stepN = d.stepNumber ?? 1;
-  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
       className={cn(
-        "group relative w-[340px] cursor-pointer rounded-lg border bg-card shadow-card-zapier transition-all duration-150",
+        "relative w-[340px] rounded-lg border bg-card shadow-card-zapier transition-all duration-150",
         d.configured
           ? "border-border"
           : "border-dashed border-[#D1D5DB] bg-muted/40",
         selected && "ring-2 ring-[hsl(var(--brand-purple))]"
       )}
-      onClick={() => d.onSelect()}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") d.onSelect();
-      }}
-      role="button"
-      tabIndex={0}
     >
-      <div className="relative p-4">
-        <div className="absolute right-3 top-3 flex items-center gap-2">
+      <Handle
+        type="target"
+        position={Position.Top}
+        title="Вход: соедините с нижней точкой предыдущего шага"
+        className="!pointer-events-auto !z-30 !h-4 !w-4 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
+      />
+      <div
+        className="relative z-0 cursor-pointer p-4"
+        onClick={() => d.onSelect()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") d.onSelect();
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="pointer-events-auto absolute right-3 top-3 z-20 flex items-center gap-2">
           <span
             className="flex size-6 items-center justify-center rounded-full bg-[#FF4A00] text-xs font-semibold text-white"
             aria-label={`Шаг ${stepN}`}
           >
             {stepN}
           </span>
-          <div className="opacity-0 transition-opacity group-hover:opacity-100">
-            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <div>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger
-                className="rounded p-1 text-muted-foreground hover:bg-muted"
+                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={(e) => e.stopPropagation()}
-                aria-label="Меню"
+                aria-label="Меню шага"
               >
                 <MoreVertical className="size-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-[80]">
+              <DropdownMenuContent align="end" side="bottom" sideOffset={6}>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
@@ -114,14 +121,10 @@ function ActionNodeInner({ data, selected }: NodeProps) {
         ) : null}
       </div>
       <Handle
-        type="target"
-        position={Position.Top}
-        className="!size-2 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
-      />
-      <Handle
         type="source"
         position={Position.Bottom}
-        className="!size-2 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
+        title="Выход: потяните к верхней точке следующего шага"
+        className="!pointer-events-auto !z-30 !h-4 !w-4 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
       />
     </div>
   );

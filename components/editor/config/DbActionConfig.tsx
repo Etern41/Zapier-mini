@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 import { safeDebouncedConfig } from "@/lib/editor/debounced-config";
 import { patchNode } from "@/lib/editor/patch-node";
 
@@ -50,15 +51,17 @@ export function DbActionConfig({
     const t = setTimeout(() => {
       const cfg = safeDebouncedConfig(debounceKey, dbActionConfigSchema);
       if (!cfg) return;
-      void patchNode(nodeId, { config: cfg }).then((ok) => {
-        if (ok) onSaved();
-      });
+      void patchNode(nodeId, { config: cfg });
     }, 500);
     return () => clearTimeout(t);
-  }, [debounceKey, nodeId, onSaved]);
+  }, [debounceKey, nodeId]);
 
   const saveNow = handleSubmit(async (data) => {
-    await patchNode(nodeId, { config: data });
+    const ok = await patchNode(nodeId, { config: data });
+    if (!ok) {
+      toast.error("Не удалось сохранить настройки");
+      return;
+    }
     onSaved();
   });
 

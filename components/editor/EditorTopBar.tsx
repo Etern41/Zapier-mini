@@ -176,14 +176,13 @@ export function EditorTopBar({
           variant={isActive ? "outline" : "default"}
           disabled={pubBusy}
           onClick={() => void publish(!isActive)}
+          className="inline-flex min-w-[9.5rem] items-center justify-center gap-2"
+          aria-busy={pubBusy}
         >
           {pubBusy ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : isActive ? (
-            "Остановить"
-          ) : (
-            "Опубликовать"
-          )}
+            <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+          ) : null}
+          {isActive ? "Остановить" : "Опубликовать"}
         </Button>
         <Button
           variant="ghost"
