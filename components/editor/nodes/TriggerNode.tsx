@@ -16,20 +16,24 @@ export type TriggerNodeData = {
   summary: string;
   configured: boolean;
   status: "draft" | "active" | "error";
+  stepNumber: number;
   onSelect: () => void;
   onDelete: () => void;
 };
 
 function TriggerNodeInner({ data, selected }: NodeProps) {
   const d = data as TriggerNodeData;
+  const stepN = d.stepNumber ?? 1;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
       className={cn(
-        "group relative w-72 cursor-pointer rounded-xl border-2 border-violet-200 bg-card shadow-sm transition-all duration-150 dark:border-violet-800",
-        selected && "ring-2 ring-violet-400",
-        "hover:border-violet-300 hover:shadow-lg dark:hover:border-violet-700"
+        "group relative w-[340px] cursor-pointer rounded-lg border bg-card shadow-card-zapier transition-all duration-150",
+        d.configured
+          ? "border-border"
+          : "border-dashed border-[#D1D5DB] bg-muted/40",
+        selected && "ring-2 ring-[hsl(var(--brand-purple))]"
       )}
       onClick={() => d.onSelect()}
       onKeyDown={(e) => {
@@ -38,57 +42,63 @@ function TriggerNodeInner({ data, selected }: NodeProps) {
       role="button"
       tabIndex={0}
     >
-      <div className="h-1.5 rounded-t-xl bg-gradient-to-r from-violet-500 to-purple-600" />
       <div className="relative p-4">
-        <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger
-              className="rounded p-1 text-muted-foreground hover:bg-muted"
-              onClick={(e) => e.stopPropagation()}
-              aria-label="Меню"
-            >
-              <MoreVertical className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  d.onSelect();
-                }}
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  d.onDelete();
-                }}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex items-center gap-2">
-          <Zap className="size-4 shrink-0 text-violet-500" />
-          <span className="text-xs uppercase text-muted-foreground">
-            Trigger
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <span
+            className="flex size-6 items-center justify-center rounded-full bg-[#FF4A00] text-xs font-semibold text-white"
+            aria-label={`Шаг ${stepN}`}
+          >
+            {stepN}
           </span>
-          <span className="ml-auto flex size-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-            1
+          <div className="opacity-0 transition-opacity group-hover:opacity-100">
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger
+                className="rounded p-1 text-muted-foreground hover:bg-muted"
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Меню"
+              >
+                <MoreVertical className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-[80]">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    d.onSelect();
+                  }}
+                >
+                  Настроить
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    d.onDelete();
+                  }}
+                >
+                  Удалить
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 pr-16">
+          <Zap className="size-4 shrink-0 text-[#FF4A00]" />
+          <span className="rounded-full border border-[#FF4A00] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#FF4A00]">
+            Триггер
           </span>
         </div>
-        <p className="mt-2 text-sm font-semibold text-foreground">
-          {d.label || "Choose a trigger"}
+        <p className="mt-3 text-sm font-semibold text-foreground">
+          {d.label || "Триггер"}
         </p>
         <p
           className={cn(
-            "mt-1 truncate text-xs",
-            d.configured ? "text-muted-foreground" : "text-violet-500"
+            "mt-1 text-xs leading-snug",
+            d.configured ? "text-muted-foreground" : "text-muted-foreground"
           )}
         >
-          {d.configured ? d.summary : "Click to configure →"}
+          {d.configured
+            ? d.summary
+            : "Выберите событие, которое запускает Zap"}
         </p>
         {d.configured ? (
           <div className="mt-2 flex items-center gap-1.5">
@@ -103,7 +113,11 @@ function TriggerNodeInner({ data, selected }: NodeProps) {
           </div>
         ) : null}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!bg-violet-500" />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!size-2 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
+      />
     </div>
   );
 }

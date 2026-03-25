@@ -23,7 +23,11 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export function CreateWorkflowModal() {
+export function CreateWorkflowModal({
+  label = "+ Создать",
+}: {
+  label?: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,12 +71,10 @@ export function CreateWorkflowModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className={cn(buttonVariants())}>
-        Создать workflow
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogTrigger className={cn(buttonVariants())}>{label}</DialogTrigger>
+      <DialogContent className="z-[100] max-w-md">
         <DialogHeader>
-          <DialogTitle>Новый workflow</DialogTitle>
+          <DialogTitle>Новый Zap</DialogTitle>
         </DialogHeader>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">

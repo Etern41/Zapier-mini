@@ -6,6 +6,7 @@ import { RunsTable } from "@/components/runs/RunsTable";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { RunRow } from "@/components/runs/RunsTable";
 
 export default async function WorkflowRunsPage({
   params,
@@ -29,11 +30,11 @@ export default async function WorkflowRunsPage({
     include: { steps: { orderBy: { createdAt: "asc" } } },
   });
 
-  const serialized = JSON.parse(JSON.stringify(runs)) as import("@/components/runs/RunsTable").RunRow[];
+  const serialized = JSON.parse(JSON.stringify(runs)) as RunRow[];
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-auto p-6">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-6">
+      <div className="flex flex-wrap items-center gap-3">
         <Link
           href={`/workflows/${id}`}
           className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -41,9 +42,22 @@ export default async function WorkflowRunsPage({
           <ArrowLeft className="mr-1 inline size-4" />
           Редактор
         </Link>
-        <h1 className="text-lg font-semibold text-foreground">
-          История: {workflow.name}
-        </h1>
+        <nav className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+          <Link href="/workflows" className="hover:text-foreground">
+            Zaps
+          </Link>
+          <span aria-hidden>/</span>
+          <Link
+            href={`/workflows/${id}`}
+            className="max-w-[200px] truncate hover:text-foreground"
+          >
+            {workflow.name}
+          </Link>
+          <span aria-hidden>/</span>
+          <span className="font-medium text-foreground">
+            История запусков
+          </span>
+        </nav>
       </div>
       <RunsTable runs={serialized} />
     </div>

@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { WorkflowStatusBadge } from "@/components/workflows/WorkflowStatusBadge";
 
 export function EditorTopBar({
@@ -29,6 +28,7 @@ export function EditorTopBar({
     "idle"
   );
   const [pubBusy, setPubBusy] = useState(false);
+  const [testBusy, setTestBusy] = useState(false);
 
   useEffect(() => {
     setName(initialName);
@@ -50,6 +50,7 @@ export function EditorTopBar({
     if (res.ok) {
       setName(trimmed);
       setSaveState("saved");
+      toast.success("Название сохранено");
       setTimeout(() => setSaveState("idle"), 2000);
       onSaved?.();
     } else {
@@ -59,6 +60,17 @@ export function EditorTopBar({
     }
     setEditing(false);
   }, [name, initialName, workflowId, onSaved]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        void saveName();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [saveName]);
 
   const publish = async (active: boolean) => {
     setPubBusy(true);
@@ -74,17 +86,37 @@ export function EditorTopBar({
         return;
       }
       setIsActive(j.isActive ?? active);
+      toast.success(active ? "Zap опубликован" : "Zap остановлен");
       onSaved?.();
     } finally {
       setPubBusy(false);
     }
   };
 
+  const testRun = async () => {
+    setTestBusy(true);
+    try {
+      const res = await fetch(`/api/workflows/${workflowId}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testMode: true }),
+      });
+      const j = (await res.json()) as { error?: string; run?: unknown };
+      if (!res.ok) {
+        toast.error(j.error ?? "Тестовый запуск не удался");
+        return;
+      }
+      toast.success("Тестовый запуск поставлен в очередь");
+    } finally {
+      setTestBusy(false);
+    }
+  };
+
   return (
-    <div className="z-10 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
+    <div className="z-10 flex h-[52px] shrink-0 items-center gap-3 border-b border-border bg-card px-4">
       <Link
         href="/workflows"
-        aria-label="Назад"
+        aria-label="Назад к Zaps"
         className={cn(
           buttonVariants({ variant: "ghost", size: "icon-sm" }),
           "size-8"
@@ -93,7 +125,13 @@ export function EditorTopBar({
         <ArrowLeft className="size-4" />
       </Link>
       <Separator orientation="vertical" className="h-5" />
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+        <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Link href="/workflows" className="hover:text-foreground">
+            Zaps
+          </Link>
+          <span aria-hidden>/</span>
+        </nav>
         {editing ? (
           <Input
             className="h-8 max-w-md"
@@ -115,46 +153,66 @@ export function EditorTopBar({
             {name}
           </button>
         )}
+        <WorkflowStatusBadge active={isActive} />
       </div>
-      <WorkflowStatusBadge active={isActive} />
-      <div className="flex items-center gap-2">
-        <Switch
-          checked={isActive}
+      <div className="flex shrink-0 items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled
+          title="Скоро"
+          className="hidden sm:inline-flex"
+        >
+          <Undo2 className="mr-1 size-3.5" />
+          Отменить
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={testBusy}
+          onClick={() => void testRun()}
+        >
+          {testBusy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            "Тестовый запуск"
+          )}
+        </Button>
+        <Button
+          size="sm"
+          variant={isActive ? "outline" : "default"}
           disabled={pubBusy}
-          onCheckedChange={(v) => void publish(v)}
-        />
+          onClick={() => void publish(!isActive)}
+        >
+          {pubBusy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : isActive ? (
+            "Остановить"
+          ) : (
+            "Опубликовать"
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={saveState === "saving"}
+          onClick={() => void saveName()}
+          className="hidden md:inline-flex"
+        >
+          {saveState === "saving" ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : saveState === "saved" ? (
+            <>
+              <Check className="mr-1 size-3.5 text-success" />
+              Сохранено
+            </>
+          ) : (
+            "Сохранить"
+          )}
+        </Button>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={saveState === "saving"}
-        onClick={() => void saveName()}
-      >
-        {saveState === "saving" ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : saveState === "saved" ? (
-          <>
-            <Check className="mr-1 size-3.5 text-success" />
-            Saved
-          </>
-        ) : (
-          "Save"
-        )}
-      </Button>
-      <Button
-        size="sm"
-        variant={isActive ? "outline" : "default"}
-        disabled={pubBusy}
-        onClick={() => void publish(!isActive)}
-      >
-        {pubBusy ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : isActive ? (
-          "Unpublish"
-        ) : (
-          "Publish"
-        )}
-      </Button>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export async function GET() {
     orderBy: { updatedAt: "desc" },
     include: {
       _count: { select: { runs: true, nodes: true } },
+      nodes: { select: { type: true } },
     },
   });
 

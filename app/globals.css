@@ -3,9 +3,8 @@
 @import "shadcn/tailwind.css";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -29,48 +28,56 @@
   --color-success-foreground: hsl(var(--success-foreground));
   --color-warning: hsl(var(--warning));
   --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-canvas: hsl(var(--canvas));
+  --color-brand-purple: hsl(var(--brand-purple));
+  --color-sidebar-active-bg: hsl(var(--sidebar-active-bg));
   --radius-lg: var(--radius);
-  --radius-md: var(--radius-md);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 }
 
 @layer base {
   :root {
-    --background: 220 16% 96%;
-    --foreground: 222 47% 8%;
+    /* Zapier-like light theme — AutoFlow */
+    --background: 220 14% 96%;
+    --foreground: 220 43% 11%;
+    --canvas: 220 14% 96%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 8%;
+    --card-foreground: 220 43% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 8%;
-    --primary: 263 70% 50%;
+    --popover-foreground: 220 43% 11%;
+    --primary: 17 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 222 47% 8%;
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 9% 48%;
-    --accent: 220 14% 92%;
-    --accent-foreground: 222 47% 8%;
+    --secondary: 210 20% 98%;
+    --secondary-foreground: 220 43% 11%;
+    --muted: 210 20% 98%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 210 20% 98%;
+    --accent-foreground: 220 43% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 88%;
-    --input: 220 13% 88%;
-    --ring: 263 70% 50%;
-    --radius: 0.75rem;
-    --radius-md: calc(var(--radius) - 2px);
-    --success: 142 76% 36%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 17 100% 50%;
+    --radius: 0.375rem;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 8%;
+    --warning-foreground: 220 43% 11%;
+    --brand-purple: 263 70% 58%;
+    --sidebar-active-bg: 17 100% 97%;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
   .dark {
     --background: 222 47% 6%;
     --foreground: 213 31% 91%;
+    --canvas: 222 47% 8%;
     --card: 222 47% 9%;
     --card-foreground: 213 31% 91%;
     --popover: 222 47% 9%;
     --popover-foreground: 213 31% 91%;
-    --primary: 263 70% 60%;
+    --primary: 17 100% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 223 47% 11%;
     --secondary-foreground: 213 31% 91%;
@@ -82,11 +89,13 @@
     --destructive-foreground: 0 0% 100%;
     --border: 216 34% 17%;
     --input: 216 34% 17%;
-    --ring: 263 70% 60%;
-    --success: 142 76% 36%;
+    --ring: 17 100% 55%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 8%;
+    --warning-foreground: 222 47% 6%;
+    --brand-purple: 263 70% 65%;
+    --sidebar-active-bg: 17 60% 15%;
   }
 
   * {
@@ -94,10 +103,30 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-size: 14px;
+    color: #374151;
   }
 
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+  }
+  .shadow-card-zapier {
+    box-shadow: var(--card-shadow);
   }
 }

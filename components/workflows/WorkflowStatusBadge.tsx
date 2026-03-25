@@ -12,7 +12,7 @@ export function WorkflowStatusBadge({ active }: { active: boolean }) {
           : "bg-muted text-muted-foreground"
       )}
     >
-      {active ? "Active" : "Draft"}
+      {active ? "Опубликован" : "Черновик"}
     </Badge>
   );
 }

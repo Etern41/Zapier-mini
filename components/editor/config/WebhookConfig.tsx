@@ -9,6 +9,7 @@ import {
   webhookConfigSchema,
   type WebhookConfigInput,
 } from "@/lib/validations";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,8 +89,20 @@ export function WebhookConfig({
           </Button>
         </div>
       </div>
+      <Alert>
+        <AlertDescription className="text-xs text-muted-foreground">
+          Вызовите URL методом ниже. При необходимости передайте заголовок{" "}
+          <code className="rounded bg-muted px-1">X-Webhook-Secret</code> со
+          значением секрета. Пример:
+          <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-2 font-mono text-[11px]">
+            {`curl -X ${values.method} "${url}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"hello":"world"}'`}
+          </pre>
+        </AlertDescription>
+      </Alert>
       <div className="space-y-2">
-        <Label>Method</Label>
+        <Label>Метод</Label>
         <Select
           value={values.method}
           onValueChange={(v) =>

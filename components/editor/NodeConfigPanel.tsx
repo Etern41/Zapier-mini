@@ -24,6 +24,19 @@ type NodeRow = {
   config: unknown;
 };
 
+function triggerTitle(type: NodeType): string {
+  switch (type) {
+    case "TRIGGER_WEBHOOK":
+      return "Триггер: Webhook";
+    case "TRIGGER_SCHEDULE":
+      return "Триггер: Расписание";
+    case "TRIGGER_EMAIL":
+      return "Триггер: Email";
+    default:
+      return "Триггер";
+  }
+}
+
 export function NodeConfigPanel({
   open,
   workflowId,
@@ -61,28 +74,36 @@ export function NodeConfigPanel({
       };
       if (!res.ok) {
         toast.error(j.error ?? "Ошибка тестового запуска");
+      } else {
+        toast.success("Тест выполнен");
       }
       setTestOk(res.ok && j.success !== false);
       setTestOut(j.run ?? j);
     } catch {
       setTestOk(false);
       setTestOut({ error: "Request failed" });
+      toast.error("Запрос не удался");
     } finally {
       setTestLoading(false);
     }
+  };
+
+  const handleDone = () => {
+    onSaved();
+    onClose();
   };
 
   if (!open || !node) return null;
 
   const isTr = String(node.type).startsWith("TRIGGER");
   const Icon = isTr ? Zap : Play;
-  const iconClass = isTr ? "text-violet-500" : "text-blue-500";
+  const iconClass = isTr ? "text-[#FF4A00]" : "text-[hsl(var(--brand-purple))]";
+  const headerTitle = isTr ? triggerTitle(node.type) : node.label;
 
   return (
     <div
       className={cn(
-        "absolute right-0 top-0 z-20 flex h-full w-96 flex-col border-l border-border bg-card shadow-lg transition-transform duration-200",
-        open ? "translate-x-0" : "translate-x-full"
+        "absolute right-0 top-0 z-30 flex h-full w-[320px] flex-col border-l border-border bg-card shadow-lg"
       )}
     >
       <Tabs
@@ -90,10 +111,10 @@ export function NodeConfigPanel({
         onValueChange={setTab}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <Icon className={cn("size-5 shrink-0", iconClass)} />
           <span className="min-w-0 flex-1 truncate text-sm font-medium">
-            {node.label}
+            {headerTitle}
           </span>
           <TabsList className="h-8 shrink-0">
             <TabsTrigger value="config" className="text-xs">
@@ -107,7 +128,7 @@ export function NodeConfigPanel({
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="ml-auto size-8 shrink-0"
+            className="size-8 shrink-0"
             onClick={onClose}
             aria-label="Закрыть"
           >
@@ -117,71 +138,78 @@ export function NodeConfigPanel({
 
         <TabsContent
           value="config"
-          className="mt-0 min-h-0 flex-1 overflow-y-auto p-4 outline-none"
+          className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden outline-none"
         >
-          {node.type === "TRIGGER_WEBHOOK" ? (
-            <WebhookConfig
-              workflowId={workflowId}
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "TRIGGER_SCHEDULE" ? (
-            <ScheduleConfig
-              workflowId={workflowId}
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "TRIGGER_EMAIL" ? (
-            <EmailTriggerConfig
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "ACTION_HTTP" ? (
-            <HttpActionConfig
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "ACTION_EMAIL" ? (
-            <EmailActionConfig
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "ACTION_TELEGRAM" ? (
-            <TelegramConfig
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "ACTION_DB" ? (
-            <DbActionConfig
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
-          {node.type === "ACTION_TRANSFORM" ? (
-            <TransformConfig
-              nodeId={node.id}
-              initial={node.config}
-              onSaved={onSaved}
-            />
-          ) : null}
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            {node.type === "TRIGGER_WEBHOOK" ? (
+              <WebhookConfig
+                workflowId={workflowId}
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "TRIGGER_SCHEDULE" ? (
+              <ScheduleConfig
+                workflowId={workflowId}
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "TRIGGER_EMAIL" ? (
+              <EmailTriggerConfig
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "ACTION_HTTP" ? (
+              <HttpActionConfig
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "ACTION_EMAIL" ? (
+              <EmailActionConfig
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "ACTION_TELEGRAM" ? (
+              <TelegramConfig
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "ACTION_DB" ? (
+              <DbActionConfig
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+            {node.type === "ACTION_TRANSFORM" ? (
+              <TransformConfig
+                nodeId={node.id}
+                initial={node.config}
+                onSaved={onSaved}
+              />
+            ) : null}
+          </div>
+          <div className="shrink-0 border-t border-border bg-card p-3">
+            <Button type="button" className="w-full" onClick={handleDone}>
+              Сохранить
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent
           value="test"
-          className="mt-0 flex flex-col gap-3 p-4 outline-none"
+          className="mt-0 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 outline-none"
         >
           <Button
             type="button"
@@ -215,6 +243,14 @@ export function NodeConfigPanel({
               {JSON.stringify(testOut, null, 2)}
             </pre>
           ) : null}
+          <Button
+            type="button"
+            variant="secondary"
+            className="mt-auto w-full"
+            onClick={handleDone}
+          >
+            Закрыть панель
+          </Button>
         </TabsContent>
       </Tabs>
     </div>

@@ -38,7 +38,10 @@ export function ButtonEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
-        style={{ strokeDasharray: "5 5" }}
+        style={{
+          stroke: "#7C3AED",
+          strokeWidth: 2,
+        }}
       />
       <EdgeLabelRenderer>
         <div

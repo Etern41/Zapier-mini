@@ -109,7 +109,7 @@ export function ScheduleConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <div className="space-y-2">
-        <Label>Frequency</Label>
+        <Label>Частота</Label>
         <Select
           value={values.frequency}
           onValueChange={(v) =>
@@ -122,12 +122,12 @@ export function ScheduleConfig({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="every_minute">Every minute</SelectItem>
-            <SelectItem value="every_5_min">Every 5 min</SelectItem>
-            <SelectItem value="every_hour">Every hour</SelectItem>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="custom">Custom</SelectItem>
+            <SelectItem value="every_minute">Каждую минуту</SelectItem>
+            <SelectItem value="every_5_min">Каждые 5 минут</SelectItem>
+            <SelectItem value="every_hour">Каждый час</SelectItem>
+            <SelectItem value="daily">Ежедневно</SelectItem>
+            <SelectItem value="weekly">Еженедельно</SelectItem>
+            <SelectItem value="custom">Произвольный cron</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -146,7 +146,7 @@ export function ScheduleConfig({
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label>Timezone</Label>
+        <Label>Часовой пояс</Label>
         <Select
           value={values.timezone}
           onValueChange={(v) =>
@@ -175,7 +175,9 @@ export function ScheduleConfig({
       </p>
       {lastRuns.length > 0 ? (
         <div>
-          <Label className="text-muted-foreground">Last 3 runs</Label>
+          <Label className="text-muted-foreground">
+            Последние 3 запуска
+          </Label>
           <ul className="mt-1 list-inside list-disc text-xs text-muted-foreground">
             {lastRuns.map((r) => (
               <li key={r.startedAt}>{r.startedAt}</li>

@@ -8,7 +8,6 @@ import {
   Background,
   BackgroundVariant,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -22,6 +21,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EditorTopBar } from "@/components/editor/EditorTopBar";
+import { FlowFitView } from "@/components/editor/FlowFitView";
 import { NodePicker } from "@/components/editor/NodePicker";
 import type { PickerKey } from "@/lib/editor/node-meta";
 import { NodeConfigPanel } from "@/components/editor/NodeConfigPanel";
@@ -90,10 +90,10 @@ async function patchOrders(workflowId: string, nodes: WfNode[], edges: WfEdge[])
 }
 
 const rail = [
-  { id: "triggers" as const, Icon: Zap, label: "Triggers" },
-  { id: "actions" as const, Icon: Play, label: "Actions" },
-  { id: "history" as const, Icon: Clock, label: "Run History" },
-  { id: "settings" as const, Icon: Settings, label: "Settings" },
+  { id: "triggers" as const, Icon: Zap, label: "Триггеры" },
+  { id: "actions" as const, Icon: Play, label: "Действия" },
+  { id: "history" as const, Icon: Clock, label: "История" },
+  { id: "settings" as const, Icon: Settings, label: "Настройки" },
 ];
 
 export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
@@ -108,6 +108,8 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
     "triggers"
   );
   const dragSave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [fitNonce, setFitNonce] = useState(0);
+  const didMountFit = useRef(false);
 
   const reload = useCallback(async () => {
     const r = await fetch(`/api/workflows/${wf.id}`);
@@ -119,6 +121,13 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
   useEffect(() => {
     setWf(initial);
   }, [initial]);
+
+  useEffect(() => {
+    if (!didMountFit.current) {
+      didMountFit.current = true;
+      setFitNonce((n) => n + 1);
+    }
+  }, []);
 
   const hasTrigger = useMemo(
     () => wf.nodes.some((n) => String(n.type).startsWith("TRIGGER")),
@@ -214,6 +223,8 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       }
       setBetween(null);
       setSelectedId(newNode.id);
+      setFitNonce((n) => n + 1);
+      toast.success("Шаг добавлен");
     },
     [wf, between, reload]
   );
@@ -257,25 +268,30 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       const st = nodeStatus(configured, wf.isActive);
       const isTr = String(n.type).startsWith("TRIGGER");
       if (!isTr) actionStep += 1;
+      const stepNumber = idx + 1;
+      const y = idx * 200;
+      const x = 400;
       return {
         id: n.id,
         type: isTr ? "trigger" : "action",
-        position: { x: n.positionX || 400, y: n.positionY || idx * 220 },
+        position: { x: n.positionX || x, y: n.positionY || y },
         data: isTr
           ? {
               label: n.label,
               summary,
               configured,
               status: st,
+              stepNumber,
               onSelect: () => setSelectedId(n.id),
               onDelete: () => void onDeleteNode(n.id),
             }
           : {
               label: n.label,
-              stepLabel: `Action · Step ${actionStep}`,
+              stepLabel: `Действие · шаг ${actionStep}`,
               summary,
               configured,
               status: st,
+              stepNumber,
               onSelect: () => setSelectedId(n.id),
               onDelete: () => void onDeleteNode(n.id),
             },
@@ -288,7 +304,10 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       target: e.targetId,
       type: "button",
       animated: true,
-      style: { strokeDasharray: "5 5" },
+      style: {
+        stroke: "hsl(var(--brand-purple))",
+        strokeWidth: 2,
+      },
       data: {
         onAdd: () => openPickerBetween(e.sourceId, e.targetId),
       },
@@ -353,7 +372,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
         onSaved={() => void reload()}
       />
       <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
-        <div className="flex w-12 shrink-0 flex-col items-center gap-1 bg-[#111827] py-3">
+        <div className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border bg-card py-3">
           {rail.map(({ id, Icon, label }) =>
             id === "history" ? (
               <Link
@@ -362,7 +381,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
                 title={label}
                 className={cn(
                   "flex size-9 items-center justify-center rounded-lg",
-                  "text-slate-500 hover:bg-white/10 hover:text-slate-300"
+                  "text-muted-foreground hover:bg-muted"
                 )}
               >
                 <Icon className="size-4" />
@@ -377,8 +396,8 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
                 className={cn(
                   "size-9 rounded-lg",
                   railTab === id
-                    ? "bg-white/15 text-white"
-                    : "text-slate-500 hover:bg-white/10 hover:text-slate-300"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
                 )}
                 onClick={() => setRailTab(id)}
               >
@@ -387,7 +406,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
             )
           )}
         </div>
-        <div className="relative min-h-0 flex-1 bg-[hsl(var(--muted))]">
+        <div className="relative min-h-0 flex-1 bg-canvas">
           <ReactFlowProvider>
             <ReactFlow
               nodes={nodes}
@@ -403,16 +422,15 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
             >
               <Background
                 variant={BackgroundVariant.Dots}
-                gap={20}
-                size={1}
-                color="#d1d5db"
+                gap={24}
+                size={0.5}
+                color="#e5e7eb"
               />
-              <Controls className="!bottom-2 !left-2" />
-              <MiniMap
-                className="!bottom-2 !right-2 hidden md:block"
-                pannable
-                zoomable
+              <Controls
+                className="!bottom-3 !right-3 scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
+                showInteractive={false}
               />
+              <FlowFitView nonce={fitNonce} />
             </ReactFlow>
           </ReactFlowProvider>
           {!hasTrigger ? (
@@ -427,7 +445,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
           ) : (
             <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
               <Button variant="secondary" onClick={() => openPicker()}>
-                + Add a step
+                + Добавить шаг
               </Button>
             </div>
           )}

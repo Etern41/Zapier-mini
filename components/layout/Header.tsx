@@ -10,9 +10,9 @@ export function Header({
   email?: string | null;
 }) {
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-card px-4">
-      <span className="text-sm font-medium text-foreground">{title}</span>
-      <div className="flex items-center gap-2">
+    <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-border bg-card px-4">
+      <span className="page-title">{title}</span>
+      <div className="flex items-center gap-3">
         <ThemeToggle />
         {email ? (
           <span className="text-xs text-muted-foreground">{email}</span>

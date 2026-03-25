@@ -17,20 +17,24 @@ export type ActionNodeData = {
   summary: string;
   configured: boolean;
   status: "draft" | "active" | "error";
+  stepNumber: number;
   onSelect: () => void;
   onDelete: () => void;
 };
 
 function ActionNodeInner({ data, selected }: NodeProps) {
   const d = data as ActionNodeData;
+  const stepN = d.stepNumber ?? 1;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
       className={cn(
-        "group relative w-72 cursor-pointer rounded-xl border-2 border-gray-200 bg-card shadow-sm transition-all duration-150 dark:border-gray-700",
-        selected && "ring-2 ring-primary/40",
-        "hover:shadow-lg"
+        "group relative w-[340px] cursor-pointer rounded-lg border bg-card shadow-card-zapier transition-all duration-150",
+        d.configured
+          ? "border-border"
+          : "border-dashed border-[#D1D5DB] bg-muted/40",
+        selected && "ring-2 ring-[hsl(var(--brand-purple))]"
       )}
       onClick={() => d.onSelect()}
       onKeyDown={(e) => {
@@ -39,54 +43,62 @@ function ActionNodeInner({ data, selected }: NodeProps) {
       role="button"
       tabIndex={0}
     >
-      <div className="h-1.5 rounded-t-xl bg-gradient-to-r from-blue-500 to-cyan-500" />
       <div className="relative p-4">
-        <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger
-              className="rounded p-1 text-muted-foreground hover:bg-muted"
-              onClick={(e) => e.stopPropagation()}
-              aria-label="Меню"
-            >
-              <MoreVertical className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  d.onSelect();
-                }}
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  d.onDelete();
-                }}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex items-center gap-2">
-          <Play className="size-4 shrink-0 text-blue-500" />
-          <span className="text-xs uppercase text-muted-foreground">
-            {d.stepLabel}
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <span
+            className="flex size-6 items-center justify-center rounded-full bg-[#FF4A00] text-xs font-semibold text-white"
+            aria-label={`Шаг ${stepN}`}
+          >
+            {stepN}
           </span>
+          <div className="opacity-0 transition-opacity group-hover:opacity-100">
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger
+                className="rounded p-1 text-muted-foreground hover:bg-muted"
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Меню"
+              >
+                <MoreVertical className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-[80]">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    d.onSelect();
+                  }}
+                >
+                  Настроить
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    d.onDelete();
+                  }}
+                >
+                  Удалить
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <p className="mt-2 text-sm font-semibold text-foreground">
-          {d.label || "Action"}
+        <div className="flex flex-wrap items-center gap-2 pr-16">
+          <Play className="size-4 shrink-0 text-muted-foreground" />
+          <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Действие
+          </span>
+          <span className="text-[10px] text-muted-foreground">{d.stepLabel}</span>
+        </div>
+        <p className="mt-3 text-sm font-semibold text-foreground">
+          {d.label || "Действие"}
         </p>
         <p
           className={cn(
-            "mt-1 truncate text-xs",
-            d.configured ? "text-muted-foreground" : "text-violet-500"
+            "mt-1 text-xs leading-snug",
+            d.configured ? "text-muted-foreground" : "text-muted-foreground"
           )}
         >
-          {d.configured ? d.summary : "Click to configure →"}
+          {d.configured ? d.summary : "Выберите действие"}
         </p>
         {d.configured ? (
           <div className="mt-2 flex items-center gap-1.5">
@@ -101,8 +113,16 @@ function ActionNodeInner({ data, selected }: NodeProps) {
           </div>
         ) : null}
       </div>
-      <Handle type="target" position={Position.Top} className="!bg-slate-400" />
-      <Handle type="source" position={Position.Bottom} className="!bg-slate-400" />
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!size-2 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!size-2 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
+      />
     </div>
   );
 }

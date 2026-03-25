@@ -90,6 +90,7 @@ export async function GET() {
 
   const recentFailures = failedRuns.map((r) => ({
     id: r.id,
+    workflowId: r.workflowId,
     workflowName: r.workflow.name,
     error: r.error,
     startedAt: r.startedAt.toISOString(),
