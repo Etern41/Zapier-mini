@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String     @db.VarChar(120)
+  password  String
+  createdAt DateTime   @default(now())
+  workflows Workflow[]
+}
+
+model Workflow {
+  id            String         @id @default(cuid())
+  name          String         @db.VarChar(120)
+  description   String?        @db.VarChar(500)
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive      Boolean        @default(false)
+  webhookSecret String?
+  nodes         WorkflowNode[]
+  edges         WorkflowEdge[]
+  runs          WorkflowRun[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model WorkflowNode {
+  id         String   @id @default(cuid())
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  type       NodeType
+  label      String   @db.VarChar(120)
+  config     Json     @default("{}")
+  positionX  Float    @default(0)
+  positionY  Float    @default(0)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model WorkflowEdge {
+  id         String   @id @default(cuid())
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  sourceId   String
+  targetId   String
+  createdAt  DateTime @default(now())
+}
+
+model WorkflowRun {
+  id         String      @id @default(cuid())
+  workflowId String
+  workflow   Workflow    @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  status     RunStatus   @default(RUNNING)
+  trigger    String      @db.VarChar(50)
+  startedAt  DateTime    @default(now())
+  finishedAt DateTime?
+  error      String?     @db.VarChar(2000)
+  steps      StepLog[]
+}
+
+model StepLog {
+  id        String      @id @default(cuid())
+  runId     String
+  run       WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  nodeId    String
+  nodeLabel String      @db.VarChar(120)
+  status    StepStatus
+  input     Json?
+  output    Json?
+  error     String?     @db.VarChar(2000)
+  duration  Int?
+  attempt   Int         @default(1)
+  createdAt DateTime    @default(now())
+}
+
+enum NodeType {
+  TRIGGER_WEBHOOK
+  TRIGGER_SCHEDULE
+  TRIGGER_EMAIL
+  ACTION_HTTP
+  ACTION_EMAIL
+  ACTION_TELEGRAM
+  ACTION_DB
+  ACTION_TRANSFORM
+}
+
+enum RunStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  PAUSED
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  SKIPPED
+}

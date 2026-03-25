@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AutoFlow (mini-Zapier)
 
-## Getting Started
+Платформа автоматизации workflow: Next.js 14, PostgreSQL + Prisma, NextAuth (credentials), BullMQ + Redis, React Flow, расписание (node-cron в worker), вебхуки, шаги HTTP / Email / Telegram / SQL / Transform.
 
-First, run the development server:
+## Требования
+
+- Node.js 18+
+- PostgreSQL
+- Redis (например Upstash; переменная `UPSTASH_REDIS_URL`)
+
+## Настройка
+
+1. Скопируйте `.env.example` в `.env` и заполните переменные.
+2. Примените схему к БД:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx prisma db push
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Установите зависимости и запустите приложение:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. В отдельном терминале запустите worker (очередь + cron + опрос IMAP):
 
-## Learn More
+```bash
+npm run worker
+```
 
-To learn more about Next.js, take a look at the following resources:
+Без worker вебхуки ставят задачи в очередь, но выполнение не произойдёт до запуска воркера.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Переменные окружения
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+См. `.env.example`. Обязательно: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`, `UPSTASH_REDIS_URL` для полного цикла.
 
-## Deploy on Vercel
+## Документация API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Интерактивно: `/api/docs`
+- JSON: `/api/openapi.json`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Деплой (Vercel)
+
+Next.js приложение можно задеплоить на Vercel; **worker** (`npm run worker`) нужно запускать отдельно (VPS, Railway, Render и т.д.) с теми же переменными окружения и доступом к Redis и PostgreSQL.
