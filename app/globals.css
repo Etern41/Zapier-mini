@@ -70,32 +70,32 @@
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 213 31% 91%;
-    --canvas: 222 47% 8%;
-    --card: 222 47% 9%;
-    --card-foreground: 213 31% 91%;
-    --popover: 222 47% 9%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 17 100% 55%;
+    --background: 220 16% 14%;
+    --foreground: 220 14% 90%;
+    --canvas: 220 16% 12%;
+    --card: 220 16% 18%;
+    --card-foreground: 220 14% 90%;
+    --popover: 220 16% 20%;
+    --popover-foreground: 220 14% 90%;
+    --primary: 17 90% 56%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 223 47% 11%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 223 47% 11%;
-    --accent-foreground: 213 31% 91%;
-    --destructive: 0 84% 60%;
+    --secondary: 220 16% 22%;
+    --secondary-foreground: 220 14% 80%;
+    --muted: 220 16% 22%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 220 16% 24%;
+    --accent-foreground: 220 14% 90%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 17 100% 55%;
-    --success: 160 84% 39%;
+    --border: 220 16% 26%;
+    --input: 220 16% 24%;
+    --ring: 17 90% 56%;
+    --success: 160 70% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 6%;
-    --brand-purple: 263 70% 65%;
-    --sidebar-active-bg: 17 60% 15%;
+    --warning: 38 85% 52%;
+    --warning-foreground: 220 16% 14%;
+    --brand-purple: 263 60% 68%;
+    --sidebar-active-bg: 17 40% 22%;
   }
 
   * {
@@ -105,7 +105,6 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-size: 14px;
-    color: #374151;
   }
 
   html {
@@ -117,14 +116,14 @@
   .page-title {
     font-size: 20px;
     font-weight: 600;
-    color: #111827;
+    color: hsl(var(--foreground));
   }
   .section-label {
     font-size: 11px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #6b7280;
+    color: hsl(var(--muted-foreground));
   }
   .shadow-card-zapier {
     box-shadow: var(--card-shadow);
@@ -135,4 +134,8 @@
    the node — mousedown never starts a connection. !important wins if xyflow.css loads after globals. */
 .react-flow__node .react-flow__handle {
   pointer-events: auto !important;
+}
+
+.react-flow__handle {
+  z-index: 10;
 }

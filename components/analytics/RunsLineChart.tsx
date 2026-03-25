@@ -26,8 +26,8 @@ export function RunsLineChart({
           <Tooltip
             isAnimationActive={false}
             formatter={(value) => [
-              value == null ? "—" : Number(value),
-              "Запуски",
+              `${value == null || value === "" ? "—" : Number(value)} запусков`,
+              "",
             ]}
             labelFormatter={(label) => `Дата: ${label}`}
           />

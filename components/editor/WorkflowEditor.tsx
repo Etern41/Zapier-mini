@@ -351,20 +351,14 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
     }: {
       nodes: Node[];
       edges: Edge[];
-    }) => {
-      const n = toRemove.length;
-      if (n === 0) return true;
-      const msg =
-        n === 1 ? "Удалить узел?" : `Удалить ${n} узлов?`;
-      return confirm(msg);
-    },
+    }) => toRemove.length > 0,
     []
   );
 
   const onNodesDelete = useCallback(
     (deleted: Node[]) => {
       const ids = deleted.map((n) => n.id);
-      void removeNodesByIds(ids, { optimistic: false });
+      void removeNodesByIds(ids, { optimistic: true });
     },
     [removeNodesByIds]
   );
@@ -594,73 +588,77 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
             )
           )}
         </div>
-        <div className="relative min-h-0 flex-1 bg-canvas">
-          <ReactFlowProvider>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodeDragStop={onNodeDragStop}
-              onBeforeDelete={onBeforeDelete}
-              onNodesDelete={onNodesDelete}
-              onEdgesDelete={onEdgesDelete}
-              nodeTypes={nodeTypes}
-              edgeTypes={edgeTypes}
-              nodesConnectable
-              edgesFocusable
-              connectOnClick
-              deleteKeyCode={["Backspace", "Delete"]}
-              defaultEdgeOptions={{ interactionWidth: 32 }}
-              fitView
-              className="h-full min-h-[400px]"
-            >
-              <Background
-                variant={BackgroundVariant.Dots}
-                gap={24}
-                size={0.5}
-                color="#e5e7eb"
-              />
-              <Controls
-                className="!bottom-3 !right-3 scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
-                showInteractive={false}
-              />
-              <FlowFitView nonce={fitNonce} />
-            </ReactFlow>
-          </ReactFlowProvider>
-          {!hasTrigger ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <Button
-                className="pointer-events-auto"
-                onClick={() => openPicker()}
+        <div className="relative flex min-h-0 flex-1 flex-col bg-canvas">
+          <div className="relative min-h-0 flex-1">
+            <ReactFlowProvider>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeDragStop={onNodeDragStop}
+                onBeforeDelete={onBeforeDelete}
+                onNodesDelete={onNodesDelete}
+                onEdgesDelete={onEdgesDelete}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                nodesConnectable
+                edgesFocusable
+                connectOnClick
+                deleteKeyCode={["Backspace", "Delete"]}
+                defaultEdgeOptions={{ interactionWidth: 32 }}
+                fitView
+                className="h-full min-h-[400px]"
               >
-                Добавить триггер
-              </Button>
-            </div>
-          ) : (
-            <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
-              <Button variant="secondary" onClick={() => openPicker()}>
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  gap={24}
+                  size={0.5}
+                  color="#e5e7eb"
+                />
+                <Controls
+                  className="!bottom-3 !right-3 scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
+                  showInteractive={false}
+                />
+                <FlowFitView nonce={fitNonce} />
+              </ReactFlow>
+            </ReactFlowProvider>
+            {!hasTrigger ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <Button
+                  className="pointer-events-auto"
+                  onClick={() => openPicker()}
+                >
+                  Добавить триггер
+                </Button>
+              </div>
+            ) : null}
+            {railTab === "settings" ? (
+              <div className="absolute left-14 top-2 z-10 max-w-sm rounded-lg border bg-card p-3 text-xs text-muted-foreground shadow-md">
+                <p className="font-medium text-foreground">ID воркфлоу</p>
+                <p className="mt-1 break-all font-mono">{wf.id}</p>
+                {wf.webhookSecret ? (
+                  <p className="mt-2">
+                    Для входящих webhook-запросов передайте заголовок{" "}
+                    <span className="font-mono">X-Webhook-Secret</span> со
+                    значением секрета из настроек триггера Webhook.
+                  </p>
+                ) : (
+                  <p className="mt-2">
+                    После добавления триггера Webhook здесь появится подсказка по
+                    секрету и заголовку{" "}
+                    <span className="font-mono">X-Webhook-Secret</span>.
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
+          {hasTrigger ? (
+            <div className="flex shrink-0 items-center justify-center border-t border-border bg-card py-2">
+              <Button variant="outline" size="sm" onClick={() => openPicker()}>
                 + Добавить шаг
               </Button>
-            </div>
-          )}
-          {railTab === "settings" ? (
-            <div className="absolute left-14 top-2 z-10 max-w-sm rounded-lg border bg-card p-3 text-xs text-muted-foreground shadow-md">
-              <p className="font-medium text-foreground">ID воркфлоу</p>
-              <p className="mt-1 break-all font-mono">{wf.id}</p>
-              {wf.webhookSecret ? (
-                <p className="mt-2">
-                  Для входящих webhook-запросов передайте заголовок{" "}
-                  <span className="font-mono">X-Webhook-Secret</span> со
-                  значением секрета из настроек триггера Webhook.
-                </p>
-              ) : (
-                <p className="mt-2">
-                  После добавления триггера Webhook здесь появится подсказка по
-                  секрету и заголовку <span className="font-mono">X-Webhook-Secret</span>.
-                </p>
-              )}
             </div>
           ) : null}
         </div>

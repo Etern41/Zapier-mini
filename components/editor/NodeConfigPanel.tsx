@@ -90,6 +90,11 @@ export function NodeConfigPanel({
 
   if (!open || !node) return null;
 
+  const handleChildSaved = () => {
+    onSaved();
+    onClose();
+  };
+
   const isTr = String(node.type).startsWith("TRIGGER");
   const Icon = isTr ? Zap : Play;
   const iconClass = isTr ? "text-[#FF4A00]" : "text-[hsl(var(--brand-purple))]";
@@ -141,7 +146,7 @@ export function NodeConfigPanel({
                 workflowId={workflowId}
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "TRIGGER_SCHEDULE" ? (
@@ -149,49 +154,49 @@ export function NodeConfigPanel({
                 workflowId={workflowId}
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "TRIGGER_EMAIL" ? (
               <EmailTriggerConfig
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "ACTION_HTTP" ? (
               <HttpActionConfig
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "ACTION_EMAIL" ? (
               <EmailActionConfig
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "ACTION_TELEGRAM" ? (
               <TelegramConfig
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "ACTION_DB" ? (
               <DbActionConfig
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
             {node.type === "ACTION_TRANSFORM" ? (
               <TransformConfig
                 nodeId={node.id}
                 initial={node.config}
-                onSaved={onSaved}
+                onSaved={handleChildSaved}
               />
             ) : null}
           </div>

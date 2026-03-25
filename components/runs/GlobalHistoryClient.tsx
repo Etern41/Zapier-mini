@@ -19,9 +19,9 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
   const [debouncedQ, setDebouncedQ] = useState("");
   const [wf, setWf] = useState<string>("all");
   const [range, setRange] = useState<"all" | "7d" | "24h">("all");
-  const [status, setStatus] = useState<"all" | "SUCCESS" | "FAILED" | "RUNNING">(
-    "all"
-  );
+  const [status, setStatus] = useState<
+    "all" | "SUCCESS" | "FAILED" | "RUNNING" | "PENDING"
+  >("all");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 260);
@@ -51,7 +51,13 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
     const qq = debouncedQ.toLowerCase();
     return runs.filter((r) => {
       if (since && !isAfter(new Date(r.startedAt), since)) return false;
-      if (status !== "all" && r.status !== status) return false;
+      if (status !== "all") {
+        if (status === "FAILED") {
+          if (r.status !== "FAILED" && r.status !== "ERROR") return false;
+        } else if (r.status !== status) {
+          return false;
+        }
+      }
       if (wf !== "all" && r.workflow?.id !== wf) return false;
       if (qq) {
         const name = r.workflow?.name?.toLowerCase() ?? "";
@@ -117,6 +123,9 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
             <SelectItem value="FAILED">{runStatusLabelRu("FAILED")}</SelectItem>
             <SelectItem value="RUNNING">
               {runStatusLabelRu("RUNNING")}
+            </SelectItem>
+            <SelectItem value="PENDING">
+              {runStatusLabelRu("PENDING")}
             </SelectItem>
           </SelectContent>
         </Select>

@@ -85,12 +85,21 @@ export function StepLogRow({
         <Badge
           variant="secondary"
           className={cn(
+            "inline-flex items-center gap-1.5",
             status === "SUCCESS" && "bg-success/15 text-success",
-            status === "FAILED" && "bg-destructive/15 text-destructive",
+            (status === "FAILED" || status === "ERROR") &&
+              "bg-destructive/15 text-destructive",
             status === "RUNNING" && "bg-primary/15 text-primary",
+            status === "PENDING" && "bg-muted text-muted-foreground",
             status === "SKIPPED" && "bg-muted text-muted-foreground"
           )}
         >
+          {status === "RUNNING" ? (
+            <span
+              className="size-1.5 shrink-0 animate-pulse rounded-full bg-primary"
+              aria-hidden
+            />
+          ) : null}
           {stepStatusLabelRu(status)}
         </Badge>
         {duration != null ? (

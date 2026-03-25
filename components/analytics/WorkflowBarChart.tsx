@@ -30,8 +30,8 @@ export function WorkflowBarChart({
           <Tooltip
             isAnimationActive={false}
             formatter={(value) => [
-              value == null ? "—" : Number(value),
-              "Запуски",
+              `${value == null || value === "" ? "—" : Number(value)} запусков`,
+              "",
             ]}
             labelFormatter={(label) => `Воркфлоу: ${label}`}
           />

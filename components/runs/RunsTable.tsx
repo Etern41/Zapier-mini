@@ -65,7 +65,9 @@ export function RunsTable({
   const failedStepId = useMemo(() => {
     const m = new Map<string, string | undefined>();
     for (const r of runs) {
-      const failed = r.steps.find((s) => s.status === "FAILED");
+      const failed = r.steps.find(
+        (s) => s.status === "FAILED" || s.status === "ERROR"
+      );
       m.set(r.id, failed?.nodeLabel);
     }
     return m;
@@ -170,12 +172,20 @@ export function RunsTable({
                   <Badge
                     variant="secondary"
                     className={cn(
-                      "w-fit text-xs font-normal",
+                      "inline-flex w-fit items-center gap-1.5 text-xs font-normal",
                       r.status === "SUCCESS" && "bg-success/15 text-success",
-                      r.status === "FAILED" && "bg-destructive/15 text-destructive",
-                      r.status === "RUNNING" && "bg-primary/15 text-primary"
+                      (r.status === "FAILED" || r.status === "ERROR") &&
+                        "bg-destructive/15 text-destructive",
+                      r.status === "RUNNING" && "bg-primary/15 text-primary",
+                      r.status === "PENDING" && "bg-muted text-muted-foreground"
                     )}
                   >
+                    {r.status === "RUNNING" ? (
+                      <span
+                        className="size-1.5 shrink-0 animate-pulse rounded-full bg-primary"
+                        aria-hidden
+                      />
+                    ) : null}
                     {runStatusLabelRu(r.status)}
                   </Badge>
                 </div>

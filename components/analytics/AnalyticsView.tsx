@@ -138,7 +138,8 @@ export function AnalyticsView() {
             />
           </svg>
           <p className="mt-4 text-sm text-muted-foreground">
-            Пока нет данных для графиков — запустите воркфлоу
+            Нет данных за выбранный период. Опубликуйте Zap и запустите его,
+            чтобы увидеть статистику.
           </p>
         </div>
       ) : (

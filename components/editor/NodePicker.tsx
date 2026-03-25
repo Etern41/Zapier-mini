@@ -99,28 +99,32 @@ export function NodePicker({
           <DialogTitle>Добавить шаг</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] space-y-6 overflow-y-auto">
-          {!hasTrigger ? (
-            <section>
-              <h3 className="section-label mb-2 px-0">Триггеры</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {triggerOptions.map((o) => (
-                  <button
-                    key={o.key}
-                    type="button"
-                    className="flex flex-col items-start gap-1 rounded-lg border border-border bg-card p-3 text-left text-sm shadow-card-zapier transition-colors hover:border-primary/40 hover:bg-muted/50"
-                    onClick={() => {
-                      onPick(o.key);
-                      onOpenChange(false);
-                    }}
-                  >
-                    <o.icon className="size-5 text-[#FF4A00]" />
-                    <span className="font-medium text-foreground">{o.name}</span>
-                    <span className="text-xs text-muted-foreground">{o.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          <section>
+            <h3 className="section-label mb-2 px-0">Триггеры</h3>
+            {hasTrigger ? (
+              <p className="mb-2 text-xs text-muted-foreground">
+                В воркфлоу уже есть триггер. Добавление второго заменит стартовую
+                точку.
+              </p>
+            ) : null}
+            <div className="grid grid-cols-2 gap-2">
+              {triggerOptions.map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  className="flex flex-col items-start gap-1 rounded-lg border border-border bg-card p-3 text-left text-sm shadow-card-zapier transition-colors hover:border-primary/40 hover:bg-muted/50"
+                  onClick={() => {
+                    onPick(o.key);
+                    onOpenChange(false);
+                  }}
+                >
+                  <o.icon className="size-5 text-[#FF4A00]" />
+                  <span className="font-medium text-foreground">{o.name}</span>
+                  <span className="text-xs text-muted-foreground">{o.desc}</span>
+                </button>
+              ))}
+            </div>
+          </section>
           <section>
             <h3 className="section-label mb-2 px-0">Действия</h3>
             <div className="grid grid-cols-2 gap-2">

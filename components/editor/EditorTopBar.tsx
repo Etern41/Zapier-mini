@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,6 @@ export function EditorTopBar({
     if (res.ok) {
       setName(trimmed);
       setSaveState("saved");
-      toast.success("Название сохранено");
       setTimeout(() => setSaveState("idle"), 2000);
       onSaved?.();
     } else {
@@ -132,28 +131,41 @@ export function EditorTopBar({
           </Link>
           <span aria-hidden>/</span>
         </nav>
-        {editing ? (
-          <Input
-            className="h-8 max-w-md"
-            value={name}
-            maxLength={120}
-            autoFocus
-            onChange={(e) => setName(e.target.value)}
-            onBlur={() => void saveName()}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void saveName();
-            }}
-          />
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-auto max-w-md truncate px-1 py-0 text-sm font-semibold text-foreground hover:underline"
-            onClick={() => setEditing(true)}
-          >
-            {name}
-          </Button>
-        )}
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {editing ? (
+            <Input
+              className="h-8 max-w-md"
+              value={name}
+              maxLength={120}
+              autoFocus
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => void saveName()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void saveName();
+              }}
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto max-w-md truncate px-1 py-0 text-sm font-semibold text-foreground hover:underline"
+              onClick={() => setEditing(true)}
+            >
+              {name}
+            </Button>
+          )}
+          {saveState === "saving" ? (
+            <Loader2
+              className="size-4 shrink-0 animate-spin text-muted-foreground"
+              aria-hidden
+            />
+          ) : null}
+          {saveState === "saved" ? (
+            <span className="text-xs text-success transition-opacity duration-300">
+              ✓ Сохранено
+            </span>
+          ) : null}
+        </div>
         <WorkflowStatusBadge active={isActive} />
       </div>
       <div className="flex shrink-0 items-center gap-2">
@@ -183,24 +195,6 @@ export function EditorTopBar({
             <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
           ) : null}
           {isActive ? "Остановить" : "Опубликовать"}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={saveState === "saving"}
-          onClick={() => void saveName()}
-          className="hidden md:inline-flex"
-        >
-          {saveState === "saving" ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : saveState === "saved" ? (
-            <>
-              <Check className="mr-1 size-3.5 text-success" />
-              Сохранено
-            </>
-          ) : (
-            "Сохранить"
-          )}
         </Button>
       </div>
     </div>

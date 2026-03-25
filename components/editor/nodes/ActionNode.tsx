@@ -29,7 +29,7 @@ function ActionNodeInner({ data, selected }: NodeProps) {
   return (
     <div
       className={cn(
-        "relative w-[340px] rounded-lg border bg-card shadow-card-zapier transition-all duration-150",
+        "group relative w-[340px] rounded-lg border bg-card shadow-card-zapier transition-all duration-150",
         d.configured
           ? "border-border"
           : "border-dashed border-[#D1D5DB] bg-muted/40",
@@ -44,7 +44,10 @@ function ActionNodeInner({ data, selected }: NodeProps) {
       />
       <div
         className="relative z-0 cursor-pointer p-4"
-        onClick={() => d.onSelect()}
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest(".react-flow__handle")) return;
+          d.onSelect();
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") d.onSelect();
         }}
@@ -58,16 +61,26 @@ function ActionNodeInner({ data, selected }: NodeProps) {
           >
             {stepN}
           </span>
-          <div>
+          <div
+            className={cn(
+              "opacity-0 transition-opacity group-hover:opacity-100",
+              selected && "opacity-100"
+            )}
+          >
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger
                 className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={(e) => e.stopPropagation()}
-                aria-label="Меню шага"
+                aria-label="Меню узла"
               >
                 <MoreVertical className="size-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" sideOffset={6}>
+              <DropdownMenuContent
+                align="end"
+                side="bottom"
+                sideOffset={6}
+                className="z-[200]"
+              >
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();

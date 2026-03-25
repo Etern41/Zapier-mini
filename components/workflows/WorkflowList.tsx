@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
 import {
   Clock,
   Loader2,
@@ -47,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreateWorkflowModal } from "@/components/workflows/CreateWorkflowModal";
 import { cn } from "@/lib/utils";
+import { relativeTime } from "@/lib/relative-time";
 
 type WfRow = {
   id: string;
@@ -74,8 +73,22 @@ type ExtraFilter =
   | "hasTrigger"
   | "noTrigger";
 
+type TriggerTypeFilter =
+  | "all"
+  | "TRIGGER_WEBHOOK"
+  | "TRIGGER_SCHEDULE"
+  | "TRIGGER_EMAIL";
+
 function hasTriggerNode(nodes: { type: NodeType }[]) {
   return nodes.some((n) => String(n.type).startsWith("TRIGGER"));
+}
+
+function hasTriggerType(
+  nodes: { type: NodeType }[],
+  triggerType: TriggerTypeFilter
+) {
+  if (triggerType === "all") return true;
+  return nodes.some((n) => n.type === triggerType);
 }
 
 function EmptyZapsIllustration() {
@@ -124,6 +137,8 @@ export function WorkflowList() {
     "all"
   );
   const [extraFilter, setExtraFilter] = useState<ExtraFilter>("none");
+  const [triggerTypeFilter, setTriggerTypeFilter] =
+    useState<TriggerTypeFilter>("all");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 280);
@@ -193,23 +208,26 @@ export function WorkflowList() {
       if (extraFilter === "noRuns" && w._count.runs > 0) return false;
       if (extraFilter === "hasTrigger" && !hasTriggerNode(w.nodes)) return false;
       if (extraFilter === "noTrigger" && hasTriggerNode(w.nodes)) return false;
+      if (!hasTriggerType(w.nodes, triggerTypeFilter)) return false;
       if (!q) return true;
       if (w.name.toLowerCase().includes(q)) return true;
       if (w.description?.toLowerCase().includes(q)) return true;
       return w.id.toLowerCase().includes(q);
     });
-  }, [workflows, debouncedSearch, statusFilter, extraFilter]);
+  }, [workflows, debouncedSearch, statusFilter, extraFilter, triggerTypeFilter]);
 
   const hasActiveFilters =
     debouncedSearch !== "" ||
     statusFilter !== "all" ||
-    extraFilter !== "none";
+    extraFilter !== "none" ||
+    triggerTypeFilter !== "all";
 
   const resetFilters = () => {
     setSearch("");
     setDebouncedSearch("");
     setStatusFilter("all");
     setExtraFilter("none");
+    setTriggerTypeFilter("all");
   };
 
   const setActive = async (id: string, active: boolean) => {
@@ -293,17 +311,24 @@ export function WorkflowList() {
         </Select>
         <DropdownMenu>
           <DropdownMenuTrigger
+            type="button"
             className={cn(
-              buttonVariants({ variant: "outline", size: "icon-sm" }),
-              "shrink-0"
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "shrink-0 gap-2"
             )}
-            aria-label="Дополнительные фильтры"
+            aria-label="Фильтры"
           >
             <Filter className="size-4" />
+            Фильтры
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem onClick={() => setExtraFilter("none")}>
-              Все (сброс доп. фильтров)
+            <DropdownMenuItem
+              onClick={() => {
+                setExtraFilter("none");
+                setTriggerTypeFilter("all");
+              }}
+            >
+              Сбросить все фильтры
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setExtraFilter("hasRuns")}>
@@ -317,6 +342,25 @@ export function WorkflowList() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setExtraFilter("noTrigger")}>
               Без триггера
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setTriggerTypeFilter("all")}>
+              Любой тип триггера
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTriggerTypeFilter("TRIGGER_WEBHOOK")}
+            >
+              Триггер: Webhook
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTriggerTypeFilter("TRIGGER_SCHEDULE")}
+            >
+              Триггер: Расписание
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTriggerTypeFilter("TRIGGER_EMAIL")}
+            >
+              Триггер: Email
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -499,10 +543,7 @@ export function WorkflowList() {
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                      {formatDistanceToNow(new Date(w.updatedAt), {
-                        addSuffix: true,
-                        locale: ru,
-                      })}
+                      {relativeTime(w.updatedAt)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
