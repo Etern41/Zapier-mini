@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2, Undo2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -145,13 +145,14 @@ export function EditorTopBar({
             }}
           />
         ) : (
-          <button
+          <Button
             type="button"
-            className="truncate text-left text-sm font-semibold text-foreground hover:underline"
+            variant="ghost"
+            className="h-auto max-w-md truncate px-1 py-0 text-sm font-semibold text-foreground hover:underline"
             onClick={() => setEditing(true)}
           >
             {name}
-          </button>
+          </Button>
         )}
         <WorkflowStatusBadge active={isActive} />
       </div>
@@ -160,25 +161,15 @@ export function EditorTopBar({
           type="button"
           variant="outline"
           size="sm"
-          disabled
-          title="Скоро"
-          className="hidden sm:inline-flex"
-        >
-          <Undo2 className="mr-1 size-3.5" />
-          Отменить
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
           disabled={testBusy}
           onClick={() => void testRun()}
+          className="inline-flex min-w-[10.5rem] items-center justify-center gap-2"
+          aria-busy={testBusy}
         >
           {testBusy ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            "Тестовый запуск"
-          )}
+            <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+          ) : null}
+          Тестовый запуск
         </Button>
         <Button
           size="sm"

@@ -7,6 +7,23 @@ export function triggerLabelRu(trigger: string): string {
   return trigger;
 }
 
+export function stepStatusLabelRu(status: string): string {
+  switch (status) {
+    case "PENDING":
+      return "Ожидание";
+    case "RUNNING":
+      return "Выполняется";
+    case "SUCCESS":
+      return "Успех";
+    case "FAILED":
+      return "Ошибка";
+    case "SKIPPED":
+      return "Пропущено";
+    default:
+      return status;
+  }
+}
+
 export function runStatusLabelRu(status: string): string {
   switch (status) {
     case "SUCCESS":

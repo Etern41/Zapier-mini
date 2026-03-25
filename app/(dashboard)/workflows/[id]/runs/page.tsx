@@ -59,7 +59,7 @@ export default async function WorkflowRunsPage({
           </span>
         </nav>
       </div>
-      <RunsTable runs={serialized} />
+      <RunsTable runs={serialized} workflowId={id} />
     </div>
   );
 }

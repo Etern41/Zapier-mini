@@ -34,6 +34,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -65,6 +66,17 @@ type Analytics = {
   runsToday: number;
   successRate: number;
 };
+
+type ExtraFilter =
+  | "none"
+  | "hasRuns"
+  | "noRuns"
+  | "hasTrigger"
+  | "noTrigger";
+
+function hasTriggerNode(nodes: { type: NodeType }[]) {
+  return nodes.some((n) => String(n.type).startsWith("TRIGGER"));
+}
 
 function EmptyZapsIllustration() {
   return (
@@ -102,16 +114,25 @@ export function WorkflowList() {
   const [workflows, setWorkflows] = useState<WfRow[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [toggleBusy, setToggleBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "draft">(
     "all"
   );
+  const [extraFilter, setExtraFilter] = useState<ExtraFilter>("none");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 280);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [wRes, aRes] = await Promise.all([
         fetch("/api/workflows"),
@@ -138,11 +159,22 @@ export function WorkflowList() {
             nodes: x.nodes ?? [],
           }))
         );
+      } else {
+        const j = (await wRes.json().catch(() => ({}))) as { error?: string };
+        const msg = j.error ?? "Не удалось загрузить Zaps";
+        setLoadError(msg);
+        toast.error(msg);
       }
       if (aRes.ok) {
         const a = (await aRes.json()) as Analytics;
         setAnalytics(a);
+      } else if (wRes.ok) {
+        toast.error("Не удалось загрузить сводку аналитики");
       }
+    } catch {
+      const msg = "Сеть недоступна. Проверьте подключение.";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -153,16 +185,32 @@ export function WorkflowList() {
   }, [load]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.toLowerCase();
     return workflows.filter((w) => {
       if (statusFilter === "active" && !w.isActive) return false;
       if (statusFilter === "draft" && w.isActive) return false;
+      if (extraFilter === "hasRuns" && w._count.runs <= 0) return false;
+      if (extraFilter === "noRuns" && w._count.runs > 0) return false;
+      if (extraFilter === "hasTrigger" && !hasTriggerNode(w.nodes)) return false;
+      if (extraFilter === "noTrigger" && hasTriggerNode(w.nodes)) return false;
       if (!q) return true;
       if (w.name.toLowerCase().includes(q)) return true;
       if (w.description?.toLowerCase().includes(q)) return true;
       return w.id.toLowerCase().includes(q);
     });
-  }, [workflows, search, statusFilter]);
+  }, [workflows, debouncedSearch, statusFilter, extraFilter]);
+
+  const hasActiveFilters =
+    debouncedSearch !== "" ||
+    statusFilter !== "all" ||
+    extraFilter !== "none";
+
+  const resetFilters = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setStatusFilter("all");
+    setExtraFilter("none");
+  };
 
   const setActive = async (id: string, active: boolean) => {
     setToggleBusy(id);
@@ -203,7 +251,6 @@ export function WorkflowList() {
       setWorkflows((prev) => prev.filter((w) => w.id !== deleteId));
       setDeleteId(null);
       toast.success("Zap удалён");
-      void load();
     } finally {
       setDeleting(false);
     }
@@ -244,16 +291,35 @@ export function WorkflowList() {
             <SelectItem value="draft">Черновики</SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          className="shrink-0"
-          title="Фильтры"
-          aria-label="Фильтры"
-        >
-          <Filter className="size-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={cn(
+              buttonVariants({ variant: "outline", size: "icon-sm" }),
+              "shrink-0"
+            )}
+            aria-label="Дополнительные фильтры"
+          >
+            <Filter className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => setExtraFilter("none")}>
+              Все (сброс доп. фильтров)
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setExtraFilter("hasRuns")}>
+              С запусками
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setExtraFilter("noRuns")}>
+              Без запусков
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setExtraFilter("hasTrigger")}>
+              С триггером
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setExtraFilter("noTrigger")}>
+              Без триггера
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           type="button"
           variant="outline"
@@ -338,6 +404,25 @@ export function WorkflowList() {
                   <TableSkeleton />
                 </td>
               </tr>
+            ) : loadError && !workflows.length ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-16 text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    Не удалось загрузить Zaps
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {loadError}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-6"
+                    onClick={() => void load()}
+                  >
+                    Повторить
+                  </Button>
+                </td>
+              </tr>
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-16 text-center">
@@ -353,9 +438,20 @@ export function WorkflowList() {
                       </div>
                     </>
                   ) : (
-                    <p className="text-muted-foreground">
-                      Ничего не найдено по запросу
-                    </p>
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">
+                        Ничего не найдено по запросу
+                      </p>
+                      {hasActiveFilters ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={resetFilters}
+                        >
+                          Сбросить фильтры
+                        </Button>
+                      ) : null}
+                    </div>
                   )}
                 </td>
               </tr>
@@ -414,6 +510,9 @@ export function WorkflowList() {
                           checked={w.isActive}
                           disabled={toggleBusy === w.id}
                           onCheckedChange={(v) => void setActive(w.id, v)}
+                          title={
+                            toggleBusy === w.id ? "Сохранение…" : undefined
+                          }
                           aria-label={
                             w.isActive ? "Остановить Zap" : "Опубликовать Zap"
                           }

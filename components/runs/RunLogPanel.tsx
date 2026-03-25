@@ -8,6 +8,8 @@ export type StepLog = {
   status: string;
   duration?: number | null;
   error?: string | null;
+  input?: unknown;
+  output?: unknown;
 };
 
 export function RunLogPanel({ steps }: { steps: StepLog[] }) {
@@ -23,6 +25,8 @@ export function RunLogPanel({ steps }: { steps: StepLog[] }) {
           status={s.status}
           duration={s.duration}
           error={s.error}
+          input={s.input}
+          output={s.output}
         />
       ))}
     </div>

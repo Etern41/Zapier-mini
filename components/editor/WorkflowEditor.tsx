@@ -10,7 +10,6 @@ import {
   Controls,
   useNodesState,
   useEdgesState,
-  addEdge,
   type Connection,
   type Edge,
   type Node,
@@ -30,6 +29,11 @@ import { ActionNode } from "@/components/editor/nodes/ActionNode";
 import { ButtonEdge } from "@/components/editor/edges/ButtonEdge";
 import { NODE_TYPE_MAP } from "@/lib/editor/node-meta";
 import { buildNodeSummary, nodeStatus } from "@/lib/editor/summary";
+import {
+  chainOrder,
+  reindexNodeOrders,
+  patchOrderDiffs,
+} from "@/lib/editor/graph-order";
 import type { NodeType } from "@prisma/client";
 
 type WfNode = {
@@ -56,38 +60,6 @@ export type WorkflowPayload = {
   nodes: WfNode[];
   edges: WfEdge[];
 };
-
-function chainOrder(nodes: WfNode[], edges: WfEdge[]): string[] {
-  const trigger = nodes.find((n) => String(n.type).startsWith("TRIGGER"));
-  if (!trigger) return nodes.map((n) => n.id).sort();
-  const out: string[] = [];
-  let cur: string | undefined = trigger.id;
-  const seen = new Set<string>();
-  while (cur && !seen.has(cur)) {
-    seen.add(cur);
-    out.push(cur);
-    const next = edges.find((e) => e.sourceId === cur);
-    cur = next?.targetId;
-  }
-  for (const n of nodes) {
-    if (!seen.has(n.id)) out.push(n.id);
-  }
-  return out;
-}
-
-async function patchOrders(workflowId: string, nodes: WfNode[], edges: WfEdge[]) {
-  const ids = chainOrder(nodes, edges);
-  await Promise.all(
-    ids.map((id, order) =>
-      fetch(`/api/nodes/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order }),
-      })
-    )
-  );
-  void workflowId;
-}
 
 const rail = [
   { id: "triggers" as const, Icon: Zap, label: "Триггеры" },
@@ -144,6 +116,28 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
     setPickerOpen(true);
   }, []);
 
+  const focusFirstTrigger = useCallback(() => {
+    setRailTab("triggers");
+    const trig = wf.nodes.find((n) => String(n.type).startsWith("TRIGGER"));
+    if (trig) {
+      setSelectedId(trig.id);
+      setFitNonce((n) => n + 1);
+    }
+  }, [wf.nodes]);
+
+  const focusFirstAction = useCallback(() => {
+    setRailTab("actions");
+    const ids = chainOrder(wf.nodes, wf.edges);
+    const firstActionId = ids.find((id) => {
+      const n = wf.nodes.find((x) => x.id === id);
+      return n && !String(n.type).startsWith("TRIGGER");
+    });
+    if (firstActionId) {
+      setSelectedId(firstActionId);
+      setFitNonce((n) => n + 1);
+    }
+  }, [wf.nodes, wf.edges]);
+
   const handlePick = useCallback(
     async (key: PickerKey) => {
       const meta = NODE_TYPE_MAP[key];
@@ -175,53 +169,119 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       }
       const newNode = body.node;
 
-      if (between) {
-        await fetch(`/api/workflows/${wf.id}/edges`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sourceId: between.sourceId,
-            targetId: between.targetId,
-          }),
-        });
-        await fetch(`/api/workflows/${wf.id}/edges`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sourceId: between.sourceId,
-            targetId: newNode.id,
-          }),
-        });
-        await fetch(`/api/workflows/${wf.id}/edges`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sourceId: newNode.id,
-            targetId: between.targetId,
-          }),
-        });
-      } else if (sorted.length > 0) {
-        const chain = chainOrder(wf.nodes, wf.edges);
-        const tail = chain[chain.length - 1];
-        if (tail) {
-          await fetch(`/api/workflows/${wf.id}/edges`, {
+      let nextEdges = [...wf.edges];
+      try {
+        if (between) {
+          const delRes = await fetch(`/api/workflows/${wf.id}/edges`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sourceId: between.sourceId,
+              targetId: between.targetId,
+            }),
+          });
+          const delBody = (await delRes.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          if (!delRes.ok) {
+            throw new Error(delBody.error ?? "Не удалось удалить связь");
+          }
+          nextEdges = nextEdges.filter(
+            (e) =>
+              !(
+                e.sourceId === between.sourceId &&
+                e.targetId === between.targetId
+              )
+          );
+          const e1Res = await fetch(`/api/workflows/${wf.id}/edges`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              sourceId: tail,
+              sourceId: between.sourceId,
               targetId: newNode.id,
             }),
           });
+          const e1Body = (await e1Res.json().catch(() => ({}))) as {
+            edge?: WfEdge;
+            error?: string;
+          };
+          if (!e1Res.ok || !e1Body.edge) {
+            throw new Error(e1Body.error ?? "Не удалось создать связь");
+          }
+          nextEdges.push(e1Body.edge);
+          const e2Res = await fetch(`/api/workflows/${wf.id}/edges`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sourceId: newNode.id,
+              targetId: between.targetId,
+            }),
+          });
+          const e2Body = (await e2Res.json().catch(() => ({}))) as {
+            edge?: WfEdge;
+            error?: string;
+          };
+          if (!e2Res.ok || !e2Body.edge) {
+            throw new Error(e2Body.error ?? "Не удалось создать связь");
+          }
+          nextEdges.push(e2Body.edge);
+        } else if (sorted.length > 0) {
+          const chain = chainOrder(wf.nodes, wf.edges);
+          const tail = chain[chain.length - 1];
+          if (tail) {
+            const eRes = await fetch(`/api/workflows/${wf.id}/edges`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sourceId: tail,
+                targetId: newNode.id,
+              }),
+            });
+            const eBody = (await eRes.json().catch(() => ({}))) as {
+              edge?: WfEdge;
+              error?: string;
+            };
+            if (!eRes.ok || !eBody.edge) {
+              throw new Error(eBody.error ?? "Не удалось создать связь");
+            }
+            nextEdges.push(eBody.edge);
+          }
+        }
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Ошибка связей");
+        await reload();
+        setBetween(null);
+        return;
+      }
+
+      const nextNodes = [...wf.nodes, newNode];
+      const afterOrders = reindexNodeOrders(nextNodes, nextEdges);
+      let webhookSecret = wf.webhookSecret;
+      if (String(meta.type).startsWith("TRIGGER_WEBHOOK") && !webhookSecret) {
+        const wr = await fetch(`/api/workflows/${wf.id}`);
+        if (wr.ok) {
+          const d = (await wr.json()) as { workflow: WorkflowPayload };
+          webhookSecret = d.workflow.webhookSecret;
         }
       }
 
-      const r2 = await fetch(`/api/workflows/${wf.id}`);
-      if (r2.ok) {
-        const d = (await r2.json()) as { workflow: WorkflowPayload };
-        await patchOrders(wf.id, d.workflow.nodes, d.workflow.edges);
+      try {
+        await patchOrderDiffs(wf.nodes, afterOrders);
+      } catch {
+        toast.error("Не удалось обновить порядок шагов");
         await reload();
+        setBetween(null);
+        return;
       }
+
+      setWf((prev) => ({
+        ...prev,
+        nodes: afterOrders,
+        edges: nextEdges,
+        webhookSecret: webhookSecret ?? prev.webhookSecret,
+      }));
       setBetween(null);
+      setPickerOpen(false);
       setSelectedId(newNode.id);
       setFitNonce((n) => n + 1);
       toast.success("Шаг добавлен");
@@ -232,16 +292,31 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
   const onDeleteNode = useCallback(
     async (id: string) => {
       if (!confirm("Удалить узел?")) return;
+      const prevWf = wf;
+      const nextNodes = wf.nodes.filter((n) => n.id !== id);
+      const nextEdges = wf.edges.filter(
+        (e) => e.sourceId !== id && e.targetId !== id
+      );
+      const afterOrders = reindexNodeOrders(nextNodes, nextEdges);
+      setWf({ ...wf, nodes: afterOrders, edges: nextEdges });
+      setSelectedId(null);
+
       const res = await fetch(`/api/nodes/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         toast.error(j.error ?? "Не удалось удалить узел");
+        setWf(prevWf);
         return;
       }
-      setSelectedId(null);
-      await reload();
+
+      try {
+        await patchOrderDiffs(prevWf.nodes, afterOrders);
+      } catch {
+        toast.error("Не удалось синхронизировать порядок");
+        await reload();
+      }
     },
-    [reload]
+    [wf, reload]
   );
 
   const nodeTypes = useMemo(
@@ -327,28 +402,42 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
   const onConnect = useCallback(
     async (c: Connection) => {
       if (!c.source || !c.target) return;
-      setEdges((eds) => addEdge({ ...c, animated: true }, eds));
       const res = await fetch(`/api/workflows/${wf.id}/edges`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sourceId: c.source, targetId: c.target }),
       });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(j.error ?? "Не удалось создать связь");
+      const body = (await res.json().catch(() => ({}))) as {
+        edge?: WfEdge;
+        error?: string;
+      };
+      if (!res.ok || !body.edge) {
+        toast.error(body.error ?? "Не удалось создать связь");
+        return;
+      }
+      const nextEdges = [...wf.edges, body.edge];
+      const nextNodes = reindexNodeOrders(wf.nodes, nextEdges);
+      try {
+        await patchOrderDiffs(wf.nodes, nextNodes);
+      } catch {
+        toast.error("Не удалось обновить порядок шагов");
         await reload();
         return;
       }
-      await reload();
+      setWf((prev) => ({
+        ...prev,
+        edges: nextEdges,
+        nodes: nextNodes,
+      }));
     },
-    [wf.id, reload, setEdges]
+    [wf.id, wf.edges, wf.nodes, reload]
   );
 
-  const onNodeDragStop = useCallback(
-    (_: unknown, node: Node) => {
-      if (dragSave.current) clearTimeout(dragSave.current);
-      dragSave.current = setTimeout(() => {
-        void fetch(`/api/nodes/${node.id}`, {
+  const onNodeDragStop = useCallback((_: unknown, node: Node) => {
+    if (dragSave.current) clearTimeout(dragSave.current);
+    dragSave.current = setTimeout(() => {
+      void (async () => {
+        const res = await fetch(`/api/nodes/${node.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -356,10 +445,13 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
             positionY: node.position.y,
           }),
         });
-      }, 400);
-    },
-    []
-  );
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          toast.error(j.error ?? "Не удалось сохранить позицию");
+        }
+      })();
+    }, 400);
+  }, []);
 
   const selectedNode = wf.nodes.find((n) => n.id === selectedId) ?? null;
 
@@ -399,7 +491,11 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted"
                 )}
-                onClick={() => setRailTab(id)}
+                onClick={() => {
+                  if (id === "triggers") focusFirstTrigger();
+                  else if (id === "actions") focusFirstAction();
+                  else setRailTab(id);
+                }}
               >
                 <Icon className="size-4" />
               </Button>
@@ -451,14 +547,20 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
           )}
           {railTab === "settings" ? (
             <div className="absolute left-14 top-2 z-10 max-w-sm rounded-lg border bg-card p-3 text-xs text-muted-foreground shadow-md">
-              <p className="font-medium text-foreground">Workflow ID</p>
+              <p className="font-medium text-foreground">ID воркфлоу</p>
               <p className="mt-1 break-all font-mono">{wf.id}</p>
               {wf.webhookSecret ? (
                 <p className="mt-2">
-                  Webhook uses header{" "}
-                  <span className="font-mono">X-Webhook-Secret</span>
+                  Для входящих webhook-запросов передайте заголовок{" "}
+                  <span className="font-mono">X-Webhook-Secret</span> со
+                  значением секрета из настроек триггера Webhook.
                 </p>
-              ) : null}
+              ) : (
+                <p className="mt-2">
+                  После добавления триггера Webhook здесь появится подсказка по
+                  секрету и заголовку <span className="font-mono">X-Webhook-Secret</span>.
+                </p>
+              )}
             </div>
           ) : null}
         </div>

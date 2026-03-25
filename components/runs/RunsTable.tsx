@@ -2,8 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format, formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RunLogPanel, type StepLog } from "@/components/runs/RunLogPanel";
@@ -28,11 +31,36 @@ export type RunRow = {
 export function RunsTable({
   runs,
   showWorkflow,
+  workflowId: pageWorkflowId,
 }: {
   runs: RunRow[];
   showWorkflow?: boolean;
+  /** When rows lack `workflow.id` (per-workflow history page), pass workflow id for «Повторить запуск». */
+  workflowId?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
+  const [rerunBusy, setRerunBusy] = useState<string | null>(null);
+
+  const rerunWorkflow = async (wfId: string, runId: string) => {
+    setRerunBusy(runId);
+    try {
+      const res = await fetch(`/api/workflows/${wfId}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(j.error ?? "Не удалось поставить запуск в очередь");
+        return;
+      }
+      toast.success("Новый запуск поставлен в очередь");
+      router.refresh();
+    } finally {
+      setRerunBusy(null);
+    }
+  };
 
   const failedStepId = useMemo(() => {
     const m = new Map<string, string | undefined>();
@@ -178,6 +206,26 @@ export function RunsTable({
                       ) : null}
                     </p>
                   ) : null}
+                  {(() => {
+                    const wfId = r.workflow?.id ?? pageWorkflowId;
+                    if (!wfId) return null;
+                    return (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={rerunBusy === r.id}
+                          onClick={() => void rerunWorkflow(wfId, r.id)}
+                        >
+                          {rerunBusy === r.id ? (
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                          ) : null}
+                          Повторить запуск
+                        </Button>
+                      </div>
+                    );
+                  })()}
                   <RunLogPanel steps={r.steps} />
                 </div>
               ) : null}

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { StatsCards } from "@/components/analytics/StatsCards";
 import { RunsLineChart } from "@/components/analytics/RunsLineChart";
 import { WorkflowBarChart } from "@/components/analytics/WorkflowBarChart";
 import { FailuresTable } from "@/components/analytics/FailuresTable";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type AnalyticsPayload = {
@@ -44,14 +46,40 @@ function AnalyticsSkeleton() {
 export function AnalyticsView() {
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/analytics");
+      const j = (await res.json().catch(() => ({}))) as
+        | AnalyticsPayload
+        | { error?: string };
+      if (!res.ok) {
+        const msg =
+          "error" in j && j.error
+            ? j.error
+            : "Не удалось загрузить аналитику";
+        setError(msg);
+        setData(null);
+        toast.error(msg);
+        return;
+      }
+      setData(j as AnalyticsPayload);
+    } catch {
+      const msg = "Сеть недоступна. Проверьте подключение.";
+      setError(msg);
+      setData(null);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    void fetch("/api/analytics")
-      .then((r) => r.json())
-      .then((d: AnalyticsPayload) => setData(d))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
+    void load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -61,10 +89,23 @@ export function AnalyticsView() {
     );
   }
 
-  if (!data) {
+  if (!data || error) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-        Не удалось загрузить аналитику
+      <div className="space-y-6">
+        <h1 className="page-title">Аналитика</h1>
+        <div className="rounded-lg border border-dashed border-border p-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            {error ?? "Не удалось загрузить аналитику"}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-6"
+            onClick={() => void load()}
+          >
+            Повторить
+          </Button>
+        </div>
       </div>
     );
   }

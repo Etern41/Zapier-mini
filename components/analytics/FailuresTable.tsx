@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function FailuresTable({
   rows,
@@ -67,8 +69,13 @@ export function FailuresTable({
                   <td className="py-2 pr-2 font-medium text-foreground">
                     {r.workflowName}
                   </td>
-                  <td className="max-w-xs py-2 pr-2 text-xs text-destructive">
-                    {r.error ?? "Неизвестная ошибка"}
+                  <td className="max-w-xs py-2 pr-2">
+                    <span
+                      className="line-clamp-2 text-xs text-destructive"
+                      title={r.error ?? "Неизвестная ошибка"}
+                    >
+                      {r.error ?? "Неизвестная ошибка"}
+                    </span>
                   </td>
                   <td className="whitespace-nowrap py-2 pr-2 text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(r.startedAt), {
@@ -77,19 +84,29 @@ export function FailuresTable({
                     })}
                   </td>
                   <td className="py-2 text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={busy === r.id}
-                      onClick={() => void retry(r.workflowId, r.id)}
-                    >
-                      {busy === r.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        "Повторить"
-                      )}
-                    </Button>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Link
+                        href={`/workflows/${r.workflowId}`}
+                        className={cn(
+                          buttonVariants({ variant: "ghost", size: "sm" })
+                        )}
+                      >
+                        Открыть
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busy === r.id}
+                        onClick={() => void retry(r.workflowId, r.id)}
+                      >
+                        {busy === r.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          "Повторить"
+                        )}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

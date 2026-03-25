@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { subDays, isAfter } from "date-fns";
-import { Filter, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,11 +16,17 @@ import { runStatusLabelRu } from "@/lib/run-labels";
 
 export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [wf, setWf] = useState<string>("all");
   const [range, setRange] = useState<"all" | "7d" | "24h">("all");
   const [status, setStatus] = useState<"all" | "SUCCESS" | "FAILED" | "RUNNING">(
     "all"
   );
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 260);
+    return () => clearTimeout(t);
+  }, [q]);
 
   const workflowOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -42,7 +48,7 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
         : range === "24h"
           ? subDays(now, 1)
           : null;
-    const qq = q.trim().toLowerCase();
+    const qq = debouncedQ.toLowerCase();
     return runs.filter((r) => {
       if (since && !isAfter(new Date(r.startedAt), since)) return false;
       if (status !== "all" && r.status !== status) return false;
@@ -54,7 +60,7 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
       }
       return true;
     });
-  }, [runs, q, wf, range, status]);
+  }, [runs, debouncedQ, wf, range, status]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-6">
@@ -67,12 +73,10 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
             placeholder="Поиск по названию воркфлоу"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-label="Поиск по истории"
           />
         </div>
-        <Select
-          value={wf}
-          onValueChange={(v) => setWf(v ?? "all")}
-        >
+        <Select value={wf} onValueChange={(v) => setWf(v ?? "all")}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Воркфлоу" />
           </SelectTrigger>
@@ -116,13 +120,6 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
             </SelectItem>
           </SelectContent>
         </Select>
-        <div
-          className="flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground"
-          title="Фильтры"
-          aria-hidden
-        >
-          <Filter className="size-4" />
-        </div>
       </div>
       <RunsTable runs={filtered} showWorkflow />
     </div>
