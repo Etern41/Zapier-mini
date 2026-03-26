@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WorkflowRunsLoading() {
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-6">
+    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-3 sm:p-6">
       <div className="flex flex-wrap items-center gap-3">
         <Skeleton className="h-9 w-28" />
         <Skeleton className="h-5 w-64" />

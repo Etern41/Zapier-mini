@@ -1,7 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export function WorkflowStatusBadge({ active }: { active: boolean }) {
+export function WorkflowStatusBadge({
+  active,
+  className,
+}: {
+  active: boolean;
+  className?: string;
+}) {
   return (
     <Badge
       variant="secondary"
@@ -14,7 +20,8 @@ export function WorkflowStatusBadge({ active }: { active: boolean }) {
         "rounded-full px-2 py-0.5 text-xs font-normal",
         active
           ? "border border-success/30 bg-success/15 text-success"
-          : "bg-muted text-muted-foreground"
+          : "bg-muted text-muted-foreground",
+        className
       )}
     >
       {active ? "Опубликован" : "Черновик"}

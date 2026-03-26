@@ -85,10 +85,10 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-6">
+    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-3 sm:p-6">
       <h1 className="sr-only">История запусков</h1>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] flex-1 max-w-md">
+        <div className="relative min-w-0 w-full flex-1 sm:min-w-[200px] sm:max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"

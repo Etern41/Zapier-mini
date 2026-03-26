@@ -3,15 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Zap, Clock, BarChart2, LogOut, BookOpen } from "lucide-react";
+import { Zap, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { dashboardDocsItem, dashboardNavItems } from "@/lib/dashboard-nav";
 
-const nav = [
-  { href: "/workflows", label: "Zaps", Icon: Zap },
-  { href: "/history", label: "История запусков", Icon: Clock },
-  { href: "/analytics", label: "Аналитика", Icon: BarChart2 },
-];
+function isNavActive(pathname: string, href: string): boolean {
+  if (href === "/workflows") {
+    return (
+      pathname === "/workflows" ||
+      (pathname.startsWith("/workflows/") && !pathname.includes("/runs"))
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Sidebar({
   userName,
@@ -28,8 +33,10 @@ export function Sidebar({
     .slice(0, 2)
     .toUpperCase();
 
+  const DocsIcon = dashboardDocsItem.Icon;
+
   return (
-    <aside className="relative flex w-[220px] shrink-0 flex-col border-r border-border bg-card">
+    <aside className="relative hidden w-[220px] shrink-0 flex-col border-r border-border bg-card md:flex">
       <div className="flex h-[52px] items-center gap-2 border-b border-border px-4">
         <Zap className="size-5 shrink-0 text-[hsl(var(--primary))]" aria-hidden />
         <span className="text-lg font-bold text-foreground">AutoFlow</span>
@@ -37,13 +44,8 @@ export function Sidebar({
       <nav className="mt-4 px-2">
         <p className="section-label mb-2 px-2">Навигация</p>
         <ul className="space-y-0.5">
-          {nav.map(({ href, label, Icon }) => {
-            const active =
-              href === "/workflows"
-                ? pathname === "/workflows" ||
-                  (pathname.startsWith("/workflows/") &&
-                    !pathname.includes("/runs"))
-                : pathname === href || pathname.startsWith(`${href}/`);
+          {dashboardNavItems.map(({ href, label, Icon }) => {
+            const active = isNavActive(pathname, href);
             return (
               <li key={href}>
                 <Link
@@ -65,15 +67,15 @@ export function Sidebar({
       </nav>
       <div className="mt-auto border-t border-border px-2 py-3">
         <a
-          href="/api/docs"
+          href={dashboardDocsItem.href}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
             "mb-2 flex h-9 items-center gap-2.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
           )}
         >
-          <BookOpen className="size-4 shrink-0" />
-          API документация
+          <DocsIcon className="size-4 shrink-0" />
+          {dashboardDocsItem.label}
         </a>
         <div className="flex items-center gap-2">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">

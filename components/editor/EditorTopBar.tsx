@@ -9,17 +9,22 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { WorkflowStatusBadge } from "@/components/workflows/WorkflowStatusBadge";
+import { MobileNav } from "@/components/layout/MobileNav";
 
 export function EditorTopBar({
   workflowId,
   name: initialName,
   isActive: initialActive,
   onSaved,
+  userName,
+  userEmail,
 }: {
   workflowId: string;
   name: string;
   isActive: boolean;
   onSaved?: () => void;
+  userName: string;
+  userEmail?: string | null;
 }) {
   const [name, setName] = useState(initialName);
   const [editing, setEditing] = useState(false);
@@ -112,70 +117,73 @@ export function EditorTopBar({
   };
 
   return (
-    <div className="z-10 flex h-[52px] shrink-0 items-center gap-3 border-b border-border bg-card px-4">
-      <Link
-        href="/workflows"
-        aria-label="Назад к Zaps"
-        className={cn(
-          buttonVariants({ variant: "ghost", size: "icon-sm" }),
-          "size-8"
-        )}
-      >
-        <ArrowLeft className="size-4" />
-      </Link>
-      <Separator orientation="vertical" className="h-5" />
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-        <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Link href="/workflows" className="hover:text-foreground">
-            Zaps
-          </Link>
-          <span aria-hidden>/</span>
-        </nav>
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          {editing ? (
-            <Input
-              className="h-8 max-w-md"
-              value={name}
-              maxLength={120}
-              autoFocus
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => void saveName()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void saveName();
-              }}
-            />
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-auto max-w-md truncate px-1 py-0 text-sm font-semibold text-foreground hover:underline"
-              onClick={() => setEditing(true)}
-            >
-              {name}
-            </Button>
+    <div className="z-10 flex shrink-0 flex-col gap-2 border-b border-border bg-card px-3 py-2 sm:h-[52px] sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-0">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <MobileNav userName={userName} userEmail={userEmail} />
+        <Link
+          href="/workflows"
+          aria-label="Назад к Zaps"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon-sm" }),
+            "size-8 shrink-0"
           )}
-          {saveState === "saving" ? (
-            <Loader2
-              className="size-4 shrink-0 animate-spin text-muted-foreground"
-              aria-hidden
-            />
-          ) : null}
-          {saveState === "saved" ? (
-            <span className="text-xs text-success transition-opacity duration-300">
-              ✓ Сохранено
-            </span>
-          ) : null}
+        >
+          <ArrowLeft className="size-4" />
+        </Link>
+        <Separator orientation="vertical" className="hidden h-5 sm:block" />
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          <nav className="hidden items-center gap-1 text-sm text-muted-foreground sm:flex">
+            <Link href="/workflows" className="hover:text-foreground">
+              Zaps
+            </Link>
+            <span aria-hidden>/</span>
+          </nav>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:flex-initial">
+            {editing ? (
+              <Input
+                className="h-8 min-w-0 flex-1 sm:max-w-md"
+                value={name}
+                maxLength={120}
+                autoFocus
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => void saveName()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void saveName();
+                }}
+              />
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-auto min-w-0 max-w-full flex-1 truncate px-1 py-0 text-left text-sm font-semibold text-foreground hover:underline sm:max-w-md sm:flex-initial"
+                onClick={() => setEditing(true)}
+              >
+                {name}
+              </Button>
+            )}
+            {saveState === "saving" ? (
+              <Loader2
+                className="size-4 shrink-0 animate-spin text-muted-foreground"
+                aria-hidden
+              />
+            ) : null}
+            {saveState === "saved" ? (
+              <span className="hidden text-xs text-success transition-opacity duration-300 sm:inline">
+                ✓ Сохранено
+              </span>
+            ) : null}
+          </div>
+          <WorkflowStatusBadge active={isActive} className="shrink-0" />
         </div>
-        <WorkflowStatusBadge active={isActive} />
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:shrink-0 sm:items-center">
         <Button
           type="button"
           variant="outline"
           size="sm"
           disabled={testBusy}
           onClick={() => void testRun()}
-          className="inline-flex min-w-[10.5rem] items-center justify-center gap-2"
+          className="inline-flex w-full items-center justify-center gap-2 sm:w-auto"
           aria-busy={testBusy}
         >
           {testBusy ? (
@@ -188,7 +196,7 @@ export function EditorTopBar({
           variant={isActive ? "outline" : "default"}
           disabled={pubBusy}
           onClick={() => void publish(!isActive)}
-          className="inline-flex min-w-[9.5rem] items-center justify-center gap-2"
+          className="inline-flex w-full items-center justify-center gap-2 sm:w-auto"
           aria-busy={pubBusy}
         >
           {pubBusy ? (

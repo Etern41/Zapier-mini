@@ -21,9 +21,11 @@ function isWorkflowEditorPath(pathname: string): boolean {
 }
 
 export function DashboardShell({
+  userName,
   userEmail,
   children,
 }: {
+  userName: string;
   userEmail?: string | null;
   children: React.ReactNode;
 }) {
@@ -34,7 +36,11 @@ export function DashboardShell({
   return (
     <>
       {!hideHeader ? (
-        <Header title={title || "AutoFlow"} email={userEmail} />
+        <Header
+          title={title || "AutoFlow"}
+          email={userEmail}
+          userName={userName}
+        />
       ) : null}
       <main className="flex min-h-0 flex-1 flex-col">{children}</main>
     </>

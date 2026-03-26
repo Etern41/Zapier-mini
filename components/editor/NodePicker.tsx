@@ -104,11 +104,11 @@ export function NodePicker({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[120] max-w-xl">
+      <DialogContent className="z-[120] max-h-[min(92dvh,720px)] w-[calc(100vw-1rem)] max-w-xl gap-3 overflow-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Добавить шаг</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[70vh] space-y-6 overflow-y-auto">
+        <div className="max-h-[min(78dvh,560px)] space-y-5 overflow-y-auto pr-1 sm:space-y-6">
           <section>
             <h3 className="section-label mb-2 px-0">Триггеры</h3>
             {hasTrigger ? (
@@ -117,7 +117,7 @@ export function NodePicker({
                 точку.
               </p>
             ) : null}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {triggerOptions.map((o) => (
                 <button
                   key={o.key}
@@ -140,7 +140,7 @@ export function NodePicker({
           </section>
           <section>
             <h3 className="section-label mb-2 px-0">Действия</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {actionOptions.map((o) => (
                 <button
                   key={o.key}

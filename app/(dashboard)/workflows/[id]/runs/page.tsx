@@ -33,7 +33,7 @@ export default async function WorkflowRunsPage({
   const serialized = JSON.parse(JSON.stringify(runs)) as RunRow[];
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-6">
+    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-3 sm:p-6">
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href={`/workflows/${id}`}

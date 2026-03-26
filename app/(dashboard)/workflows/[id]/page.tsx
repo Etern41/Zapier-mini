@@ -26,6 +26,14 @@ export default async function WorkflowEditorPage({
   if (!workflow) notFound();
 
   const payload = JSON.parse(JSON.stringify(workflow)) as WorkflowPayload;
+  const userName = session.user.name ?? "User";
+  const userEmail = session.user.email;
 
-  return <WorkflowEditor initial={payload} />;
+  return (
+    <WorkflowEditor
+      initial={payload}
+      userName={userName}
+      userEmail={userEmail}
+    />
+  );
 }

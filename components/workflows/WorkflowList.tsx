@@ -297,7 +297,7 @@ export function WorkflowList() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-auto bg-background p-6">
+    <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-3 sm:gap-6 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="sr-only">Zaps</h1>
         <div className="flex items-center gap-2">
@@ -305,8 +305,8 @@ export function WorkflowList() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] flex-1 max-w-xl">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-0 w-full flex-1 sm:min-w-[200px] sm:max-w-xl">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
@@ -322,7 +322,7 @@ export function WorkflowList() {
             setStatusFilter(v as "all" | "active" | "draft")
           }
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-full sm:w-[160px]">
             <SelectValue placeholder="Фильтр" />
           </SelectTrigger>
           <SelectContent>
@@ -336,7 +336,7 @@ export function WorkflowList() {
             type="button"
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
-              "shrink-0 gap-2"
+              "w-full shrink-0 gap-2 sm:w-auto"
             )}
             aria-label="Фильтры"
           >

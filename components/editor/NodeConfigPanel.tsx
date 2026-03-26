@@ -103,7 +103,10 @@ export function NodeConfigPanel({
   return (
     <div
       className={cn(
-        "absolute right-0 top-0 z-30 flex h-full w-[320px] flex-col border-l border-border bg-card shadow-lg"
+        "flex flex-col border-border bg-card shadow-lg",
+        "max-md:fixed max-md:inset-0 max-md:z-[70] max-md:h-[100dvh] max-md:w-full max-md:border-0 max-md:shadow-xl",
+        "max-md:pt-[env(safe-area-inset-top,0px)] max-md:pb-[env(safe-area-inset-bottom,0px)]",
+        "md:absolute md:right-0 md:top-0 md:z-30 md:h-full md:w-[320px] md:max-w-[min(100vw,320px)] md:border-l md:border-border"
       )}
     >
       <Tabs
@@ -111,12 +114,12 @@ export function NodeConfigPanel({
         onValueChange={setTab}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
+        <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2 md:h-12 md:flex-nowrap md:py-0">
           <Icon className={cn("size-5 shrink-0", iconClass)} />
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          <span className="min-w-0 max-w-[calc(100%-8rem)] flex-1 truncate text-sm font-medium md:max-w-none">
             {headerTitle}
           </span>
-          <TabsList className="h-8 shrink-0">
+          <TabsList className="h-8 w-full shrink-0 justify-start sm:w-auto md:justify-center">
             <TabsTrigger value="config" className="text-xs">
               Настройка
             </TabsTrigger>

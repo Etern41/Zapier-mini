@@ -68,7 +68,15 @@ const rail = [
   { id: "settings" as const, Icon: Settings, label: "Настройки" },
 ];
 
-export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
+export function WorkflowEditor({
+  initial,
+  userName,
+  userEmail,
+}: {
+  initial: WorkflowPayload;
+  userName: string;
+  userEmail?: string | null;
+}) {
   const [wf, setWf] = useState(initial);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [between, setBetween] = useState<{
@@ -553,9 +561,11 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
         workflowId={wf.id}
         name={wf.name}
         isActive={wf.isActive}
+        userName={userName}
+        userEmail={userEmail}
         onSaved={() => void reload()}
       />
-      <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 flex-row overflow-hidden">
         <div className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border bg-card py-3">
           {rail.map(({ id, Icon, label }) =>
             id === "history" ? (
@@ -618,7 +628,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
                   selectable: true,
                   focusable: true,
                 }}
-                className="h-full min-h-[400px]"
+                className="h-full min-h-[min(50vh,360px)] md:min-h-[400px]"
               >
                 <Background
                   variant={BackgroundVariant.Dots}
@@ -645,7 +655,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
               </div>
             ) : null}
             {railTab === "settings" ? (
-              <div className="absolute left-14 top-2 z-10 max-w-sm rounded-lg border bg-card p-3 text-xs text-muted-foreground shadow-md">
+              <div className="absolute left-2 right-2 top-2 z-10 max-h-[min(50vh,320px)] overflow-y-auto rounded-lg border bg-card p-3 text-xs text-muted-foreground shadow-md sm:left-14 sm:right-auto sm:max-w-sm">
                 <p className="font-medium text-foreground">ID воркфлоу</p>
                 <p className="mt-1 break-all font-mono">{wf.id}</p>
                 {wf.webhookSecret ? (
