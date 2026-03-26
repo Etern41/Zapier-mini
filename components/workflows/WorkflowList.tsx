@@ -552,7 +552,11 @@ export function WorkflowList() {
                           disabled={toggleBusy === w.id}
                           onCheckedChange={(v) => void setActive(w.id, v)}
                           title={
-                            toggleBusy === w.id ? "Сохранение…" : undefined
+                            toggleBusy === w.id
+                              ? "Сохранение…"
+                              : w.isActive
+                                ? "Опубликован: триггеры (webhook, расписание и т.д.) запускают Zap."
+                                : "Черновик: триггеры не работают, доступен только тест из редактора."
                           }
                           aria-label={
                             w.isActive ? "Остановить Zap" : "Опубликовать Zap"
@@ -577,11 +581,15 @@ export function WorkflowList() {
                         >
                           <MoreHorizontal className="size-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent
+                          align="end"
+                          className="min-w-[12rem]"
+                        >
                           <DropdownMenuItem
+                            className="whitespace-nowrap"
                             onClick={() => router.push(`/workflows/${w.id}`)}
                           >
-                            <Pencil className="mr-2 size-4" />
+                            <Pencil className="mr-2 size-4 shrink-0" />
                             Редактировать
                           </DropdownMenuItem>
                           <DropdownMenuItem

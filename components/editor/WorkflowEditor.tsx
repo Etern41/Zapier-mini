@@ -119,10 +119,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
   const focusFirstTrigger = useCallback(() => {
     setRailTab("triggers");
     const trig = wf.nodes.find((n) => String(n.type).startsWith("TRIGGER"));
-    if (trig) {
-      setSelectedId(trig.id);
-      setFitNonce((n) => n + 1);
-    }
+    if (trig) setSelectedId(trig.id);
   }, [wf.nodes]);
 
   const focusFirstAction = useCallback(() => {
@@ -132,10 +129,7 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       const n = wf.nodes.find((x) => x.id === id);
       return n && !String(n.type).startsWith("TRIGGER");
     });
-    if (firstActionId) {
-      setSelectedId(firstActionId);
-      setFitNonce((n) => n + 1);
-    }
+    if (firstActionId) setSelectedId(firstActionId);
   }, [wf.nodes, wf.edges]);
 
   const handlePick = useCallback(
@@ -146,7 +140,17 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
         sorted.length > 0
           ? Math.max(...sorted.map((n) => n.positionY))
           : -220;
-      const pos = { x: 400, y: maxY + 220 };
+      let pos = { x: 400, y: maxY + 220 };
+      if (between) {
+        const src = wf.nodes.find((n) => n.id === between.sourceId);
+        const tgt = wf.nodes.find((n) => n.id === between.targetId);
+        if (src && tgt) {
+          pos = {
+            x: Math.round((src.positionX + tgt.positionX) / 2),
+            y: Math.round((src.positionY + tgt.positionY) / 2),
+          };
+        }
+      }
 
       const res = await fetch(`/api/workflows/${wf.id}/nodes`, {
         method: "POST",
@@ -283,7 +287,6 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       setBetween(null);
       setPickerOpen(false);
       setSelectedId(newNode.id);
-      setFitNonce((n) => n + 1);
       toast.success("Шаг добавлен");
     },
     [wf, between, reload]
@@ -347,11 +350,12 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
 
   const onBeforeDelete = useCallback(
     async ({
-      nodes: toRemove,
+      nodes: nodesToRemove,
+      edges: edgesToRemove,
     }: {
       nodes: Node[];
       edges: Edge[];
-    }) => toRemove.length > 0,
+    }) => nodesToRemove.length > 0 || edgesToRemove.length > 0,
     []
   );
 
@@ -465,6 +469,8 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
       target: e.targetId,
       type: "button",
       animated: true,
+      selectable: true,
+      focusable: true,
       style: {
         stroke: "hsl(var(--brand-purple))",
         strokeWidth: 2,
@@ -607,8 +613,11 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
                 edgesFocusable
                 connectOnClick
                 deleteKeyCode={["Backspace", "Delete"]}
-                defaultEdgeOptions={{ interactionWidth: 32 }}
-                fitView
+                defaultEdgeOptions={{
+                  interactionWidth: 32,
+                  selectable: true,
+                  focusable: true,
+                }}
                 className="h-full min-h-[400px]"
               >
                 <Background
@@ -618,7 +627,8 @@ export function WorkflowEditor({ initial }: { initial: WorkflowPayload }) {
                   color="#e5e7eb"
                 />
                 <Controls
-                  className="!bottom-3 !right-3 scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
+                  position="bottom-right"
+                  className="scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
                   showInteractive={false}
                 />
                 <FlowFitView nonce={fitNonce} />

@@ -139,3 +139,9 @@
 .react-flow__handle {
   z-index: 10;
 }
+
+/* Panel must not stretch when mixing Tailwind position utilities with xyflow's .left/.right */
+.react-flow__panel.react-flow__controls {
+  width: fit-content;
+  max-width: none;
+}

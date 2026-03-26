@@ -130,10 +130,16 @@ function ActionNodeInner({ data, selected }: NodeProps) {
           </span>
           <span className="text-[10px] text-muted-foreground">{d.stepLabel}</span>
         </div>
-        <p className="mt-3 text-sm font-semibold text-foreground">
+        <p
+          className="mt-3 min-w-0 truncate text-sm font-semibold text-foreground"
+          title={d.label || "Действие"}
+        >
           {d.label || "Действие"}
         </p>
-        <p className="mt-1 text-xs leading-snug text-muted-foreground">
+        <p
+          className="mt-1 min-w-0 text-xs leading-snug text-muted-foreground line-clamp-2"
+          title={d.configured ? d.summary : undefined}
+        >
           {d.configured ? d.summary : "Выберите действие"}
         </p>
         {d.configured && (
