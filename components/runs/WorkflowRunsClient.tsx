@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RunsTable, type RunRow } from "@/components/runs/RunsTable";
 import { ListPagination } from "@/components/ui/list-pagination";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 export function WorkflowRunsClient({
   runs,

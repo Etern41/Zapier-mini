@@ -17,7 +17,7 @@ export function ListPagination({
   onPageChange: (p: number) => void;
   className?: string;
 }) {
-  if (total <= pageSize) return null;
+  if (total === 0) return null;
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(Math.max(1, page), totalPages);

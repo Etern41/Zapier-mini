@@ -15,7 +15,7 @@ import {
 import { RunsTable, type RunRow } from "@/components/runs/RunsTable";
 import { runStatusLabelRu } from "@/lib/run-labels";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
   const [q, setQ] = useState("");
