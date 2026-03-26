@@ -76,25 +76,15 @@ export function RunsTable({
     return m;
   }, [runs]);
 
+  const gridCols = showWorkflow
+    ? "grid-cols-[minmax(10rem,1.15fr)_minmax(9.5rem,1fr)_minmax(4.5rem,0.42fr)_minmax(6.5rem,0.55fr)_minmax(5rem,0.5fr)_auto]"
+    : "grid-cols-[minmax(9.5rem,1fr)_minmax(4.5rem,0.45fr)_minmax(6.5rem,0.55fr)_minmax(5rem,0.5fr)_auto]";
+
+  const startedRel = (iso: string) =>
+    formatDistanceToNow(new Date(iso), { addSuffix: true, locale: ru });
+
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card-zapier">
-      <div
-        className={cn(
-          "grid gap-2 border-b border-border bg-muted/40 px-4 py-3 text-left",
-          showWorkflow
-            ? "grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,0.6fr)_minmax(0,0.7fr)_auto]"
-            : "grid-cols-[minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,0.6fr)_minmax(0,0.7fr)_auto]"
-        )}
-      >
-        {showWorkflow ? (
-          <span className="section-label font-medium">Воркфлоу</span>
-        ) : null}
-        <span className="section-label font-medium">Запущен</span>
-        <span className="section-label font-medium">Длительность</span>
-        <span className="section-label font-medium">Статус</span>
-        <span className="section-label font-medium">Триггер</span>
-        <span className="section-label text-right font-medium">Действия</span>
-      </div>
       {runs.length === 0 ? (
         <div className="px-4 py-16 text-center">
           <svg
@@ -117,134 +107,172 @@ export function RunsTable({
           <p className="mt-4 text-sm text-muted-foreground">Нет запусков</p>
         </div>
       ) : (
-        runs.map((r) => {
-          const dur = formatRunDuration(
-            r.startedAt,
-            r.finishedAt,
-            r.status
-          );
-          return (
-            <div key={r.id} className="border-b border-border last:border-0">
-              <div
-                className={cn(
-                  "grid items-center gap-2 px-4 py-3",
-                  showWorkflow
-                    ? "grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,0.6fr)_minmax(0,0.7fr)_auto]"
-                    : "grid-cols-[minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,0.6fr)_minmax(0,0.7fr)_auto]"
-                )}
-              >
-                {showWorkflow ? (
-                  <div className="min-w-0">
-                    {r.workflow?.id ? (
-                      <Link
-                        href={`/workflows/${r.workflow.id}/runs`}
-                        className="flex min-w-0 items-center gap-1.5 font-medium text-foreground hover:text-primary hover:underline"
-                      >
-                        <span className="text-[#FF4A00]" aria-hidden>
-                          ⚡
-                        </span>
-                        <span className="truncate">
-                          {r.workflow?.name ?? "—"}
-                        </span>
-                      </Link>
-                    ) : (
-                      <span className="flex items-center gap-1.5 truncate font-medium">
-                        <span className="text-[#FF4A00]" aria-hidden>
-                          ⚡
-                        </span>
-                        {r.workflow?.name ?? "—"}
-                      </span>
-                    )}
-                  </div>
-                ) : null}
-                <div className="text-xs text-muted-foreground">
-                  <div>
-                    {format(new Date(r.startedAt), "dd.MM.yyyy HH:mm", {
-                      locale: ru,
-                    })}
-                  </div>
-                  <div className="text-[11px]">
-                    {formatDistanceToNow(new Date(r.startedAt), {
-                      addSuffix: true,
-                      locale: ru,
-                    })}
-                  </div>
-                </div>
-                <div className="tabular-nums text-sm text-foreground">{dur}</div>
-                <div>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "inline-flex w-fit items-center gap-1.5 text-xs font-normal",
-                      r.status === "SUCCESS" && "bg-success/15 text-success",
-                      (r.status === "FAILED" || r.status === "ERROR") &&
-                        "bg-destructive/15 text-destructive",
-                      r.status === "RUNNING" && "bg-primary/15 text-primary",
-                      r.status === "PENDING" && "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {r.status === "RUNNING" ? (
-                      <span
-                        className="size-1.5 shrink-0 animate-pulse rounded-full bg-primary"
-                        aria-hidden
-                      />
-                    ) : null}
-                    {runStatusLabelRu(r.status)}
-                  </Badge>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {triggerLabelRu(r.trigger)}
-                </div>
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={() => setOpen(open === r.id ? null : r.id)}
-                  >
-                    Подробнее
-                  </Button>
-                </div>
-              </div>
-              {open === r.id ? (
-                <div className="space-y-2 border-t border-border bg-muted/20 px-4 py-3">
-                  {r.error ? (
-                    <p className="text-sm text-destructive">
-                      {r.error}
-                      {failedStepId.get(r.id) ? (
-                        <span className="block text-xs text-muted-foreground">
-                          Сбой на шаге: {failedStepId.get(r.id)}
-                        </span>
-                      ) : null}
-                    </p>
-                  ) : null}
-                  {(() => {
-                    const wfId = r.workflow?.id ?? pageWorkflowId;
-                    if (!wfId) return null;
-                    return (
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={rerunBusy === r.id}
-                          onClick={() => void rerunWorkflow(wfId, r.id)}
-                        >
-                          {rerunBusy === r.id ? (
-                            <Loader2 className="mr-2 size-4 animate-spin" />
-                          ) : null}
-                          Повторить запуск
-                        </Button>
-                      </div>
-                    );
-                  })()}
-                  <RunLogPanel steps={r.steps} />
-                </div>
+        <div className="overflow-x-auto">
+          <div className={cn("min-w-[640px]", showWorkflow && "min-w-[720px]")}>
+            <div
+              className={cn(
+                "grid gap-x-3 gap-y-1 border-b border-border bg-muted/40 px-4 py-3 text-left",
+                gridCols
+              )}
+            >
+              {showWorkflow ? (
+                <span className="section-label whitespace-nowrap font-medium">
+                  Воркфлоу
+                </span>
               ) : null}
+              <span className="section-label whitespace-nowrap font-medium">
+                Запущен
+              </span>
+              <span className="section-label whitespace-nowrap font-medium">
+                Длительность
+              </span>
+              <span className="section-label whitespace-nowrap font-medium">
+                Статус
+              </span>
+              <span className="section-label whitespace-nowrap font-medium">
+                Триггер
+              </span>
+              <span className="section-label whitespace-nowrap text-right font-medium">
+                Действия
+              </span>
             </div>
-          );
-        })
+            {runs.map((r) => {
+              const dur = formatRunDuration(
+                r.startedAt,
+                r.finishedAt,
+                r.status
+              );
+              const rel = startedRel(r.startedAt);
+              return (
+                <div key={r.id} className="border-b border-border last:border-0">
+                  <div
+                    className={cn(
+                      "grid items-center gap-x-3 gap-y-1 px-4 py-3",
+                      gridCols
+                    )}
+                  >
+                    {showWorkflow ? (
+                      <div className="min-w-0">
+                        {r.workflow?.id ? (
+                          <Link
+                            href={`/workflows/${r.workflow.id}/runs`}
+                            className="flex min-w-0 items-center gap-1.5 font-medium text-foreground hover:text-primary hover:underline"
+                          >
+                            <span className="text-[#FF4A00]" aria-hidden>
+                              ⚡
+                            </span>
+                            <span className="truncate">
+                              {r.workflow?.name ?? "—"}
+                            </span>
+                          </Link>
+                        ) : (
+                          <span className="flex items-center gap-1.5 truncate font-medium">
+                            <span className="text-[#FF4A00]" aria-hidden>
+                              ⚡
+                            </span>
+                            {r.workflow?.name ?? "—"}
+                          </span>
+                        )}
+                      </div>
+                    ) : null}
+                    <div
+                      className="min-w-0 text-muted-foreground"
+                      title={`${format(new Date(r.startedAt), "dd.MM.yyyy HH:mm:ss", { locale: ru })} · ${rel}`}
+                    >
+                      <time
+                        dateTime={r.startedAt}
+                        className="block whitespace-nowrap text-xs tabular-nums tracking-tight text-foreground"
+                      >
+                        {format(new Date(r.startedAt), "dd.MM.yyyy HH:mm", {
+                          locale: ru,
+                        })}
+                      </time>
+                      <span className="block truncate text-[11px] leading-snug text-muted-foreground">
+                        {rel}
+                      </span>
+                    </div>
+                    <div className="whitespace-nowrap tabular-nums text-sm text-foreground">
+                      {dur}
+                    </div>
+                    <div className="min-w-0">
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "inline-flex w-fit max-w-full items-center gap-1.5 text-xs font-normal",
+                          r.status === "SUCCESS" && "bg-success/15 text-success",
+                          (r.status === "FAILED" || r.status === "ERROR") &&
+                            "bg-destructive/15 text-destructive",
+                          r.status === "RUNNING" && "bg-primary/15 text-primary",
+                          r.status === "PENDING" &&
+                            "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {r.status === "RUNNING" ? (
+                          <span
+                            className="size-1.5 shrink-0 animate-pulse rounded-full bg-primary"
+                            aria-hidden
+                          />
+                        ) : null}
+                        {runStatusLabelRu(r.status)}
+                      </Badge>
+                    </div>
+                    <div className="min-w-0 text-xs text-muted-foreground">
+                      <span className="line-clamp-2 leading-snug">
+                        {triggerLabelRu(r.trigger)}
+                      </span>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 shrink-0 text-xs"
+                        onClick={() => setOpen(open === r.id ? null : r.id)}
+                      >
+                        Подробнее
+                      </Button>
+                    </div>
+                  </div>
+                  {open === r.id ? (
+                    <div className="space-y-2 border-t border-border bg-muted/20 px-4 py-3">
+                      {r.error ? (
+                        <p className="text-sm text-destructive">
+                          {r.error}
+                          {failedStepId.get(r.id) ? (
+                            <span className="block text-xs text-muted-foreground">
+                              Сбой на шаге: {failedStepId.get(r.id)}
+                            </span>
+                          ) : null}
+                        </p>
+                      ) : null}
+                      {(() => {
+                        const wfId = r.workflow?.id ?? pageWorkflowId;
+                        if (!wfId) return null;
+                        return (
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={rerunBusy === r.id}
+                              onClick={() => void rerunWorkflow(wfId, r.id)}
+                            >
+                              {rerunBusy === r.id ? (
+                                <Loader2 className="mr-2 size-4 animate-spin" />
+                              ) : null}
+                              Повторить запуск
+                            </Button>
+                          </div>
+                        );
+                      })()}
+                      <RunLogPanel steps={r.steps} />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
       {footer}
     </div>

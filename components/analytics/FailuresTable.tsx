@@ -69,12 +69,16 @@ export function FailuresTable({
           <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="section-label pb-2 font-medium">Воркфлоу</th>
-                <th className="section-label pb-2 font-medium">
+                <th className="section-label min-w-[8rem] whitespace-nowrap px-2 pb-2 pr-3 font-medium">
+                  Воркфлоу
+                </th>
+                <th className="section-label min-w-[10rem] whitespace-nowrap px-2 pb-2 pr-3 font-medium">
                   Сообщение об ошибке
                 </th>
-                <th className="section-label pb-2 font-medium">Время</th>
-                <th className="section-label pb-2 text-right font-medium">
+                <th className="section-label min-w-[7rem] whitespace-nowrap px-2 pb-2 pr-3 font-medium">
+                  Время
+                </th>
+                <th className="section-label min-w-[5rem] whitespace-nowrap px-2 pb-2 text-right font-medium">
                   Действие
                 </th>
               </tr>
@@ -82,10 +86,10 @@ export function FailuresTable({
             <tbody>
               {slice.map((r) => (
                 <tr key={r.id} className="border-b border-border last:border-0">
-                  <td className="py-2 pr-2 font-medium text-foreground">
-                    {r.workflowName}
+                  <td className="px-2 py-2 pr-3 font-medium text-foreground">
+                    <span className="line-clamp-2">{r.workflowName}</span>
                   </td>
-                  <td className="max-w-xs py-2 pr-2">
+                  <td className="max-w-xs px-2 py-2 pr-3">
                     <span
                       className="line-clamp-2 text-xs text-destructive"
                       title={r.error ?? "Неизвестная ошибка"}
@@ -93,13 +97,13 @@ export function FailuresTable({
                       {r.error ?? "Неизвестная ошибка"}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap py-2 pr-2 text-xs text-muted-foreground">
+                  <td className="whitespace-nowrap px-2 py-2 pr-3 text-xs tabular-nums text-muted-foreground">
                     {formatDistanceToNow(new Date(r.startedAt), {
                       addSuffix: true,
                       locale: ru,
                     })}
                   </td>
-                  <td className="py-2 text-right">
+                  <td className="px-2 py-2 text-right">
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       <Link
                         href={`/workflows/${r.workflowId}`}

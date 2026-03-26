@@ -148,7 +148,7 @@ export function WorkflowEditor({
         sorted.length > 0
           ? Math.max(...sorted.map((n) => n.positionY))
           : -220;
-      let pos = { x: 400, y: maxY + 220 };
+      let pos = { x: 120, y: maxY + 220 };
       if (between) {
         const src = wf.nodes.find((n) => n.id === between.sourceId);
         const tgt = wf.nodes.find((n) => n.id === between.targetId);
@@ -443,11 +443,13 @@ export function WorkflowEditor({
       if (!isTr) actionStep += 1;
       const stepNumber = idx + 1;
       const y = idx * 200;
-      const x = 400;
+      const defaultX = 120;
+      const px = n.positionX != null ? n.positionX : defaultX;
+      const py = n.positionY != null ? n.positionY : y;
       return {
         id: n.id,
         type: isTr ? "trigger" : "action",
-        position: { x: n.positionX || x, y: n.positionY || y },
+        position: { x: px, y: py },
         data: isTr
           ? {
               label: n.label,
@@ -605,7 +607,7 @@ export function WorkflowEditor({
           )}
         </div>
         <div className="relative flex min-h-0 flex-1 flex-col bg-canvas">
-          <div className="relative min-h-0 flex-1">
+          <div className="relative min-h-0 flex-1 overflow-hidden">
             <ReactFlowProvider>
               <ReactFlow
                 nodes={nodes}
@@ -638,7 +640,7 @@ export function WorkflowEditor({
                 />
                 <Controls
                   position="bottom-right"
-                  className="scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
+                  className="max-sm:!bottom-14 scale-90 opacity-60 hover:opacity-100 [&_button]:!h-7 [&_button]:!w-7 [&_button]:!border-border"
                   showInteractive={false}
                 />
                 <FlowFitView nonce={fitNonce} />
@@ -673,14 +675,20 @@ export function WorkflowEditor({
                 )}
               </div>
             ) : null}
+            {hasTrigger ? (
+              <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-3 sm:bottom-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="pointer-events-auto border-border bg-card/95 shadow-md backdrop-blur-sm"
+                  onClick={() => openPicker()}
+                >
+                  + Добавить шаг
+                </Button>
+              </div>
+            ) : null}
           </div>
-          {hasTrigger ? (
-            <div className="flex shrink-0 items-center justify-center border-t border-border bg-card py-2">
-              <Button variant="outline" size="sm" onClick={() => openPicker()}>
-                + Добавить шаг
-              </Button>
-            </div>
-          ) : null}
         </div>
         <NodeConfigPanel
           open={!!selectedNode}

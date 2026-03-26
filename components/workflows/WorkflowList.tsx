@@ -443,22 +443,23 @@ export function WorkflowList() {
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card-zapier">
-        <table className="w-full min-w-[800px] border-collapse text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/40">
-              <th className="section-label px-4 py-3 text-left font-medium">
+              <th className="section-label min-w-[12rem] px-4 py-3 text-left font-medium whitespace-nowrap">
                 Название
               </th>
-              <th className="section-label px-4 py-3 text-left font-medium">
+              <th className="section-label min-w-[5.5rem] px-4 py-3 text-left font-medium whitespace-nowrap">
                 Приложения
               </th>
-              <th className="section-label px-4 py-3 text-left font-medium">
+              <th className="section-label min-w-[9.5rem] px-4 py-3 text-left font-medium whitespace-nowrap">
                 Последнее изменение
               </th>
-              <th className="section-label px-4 py-3 text-left font-medium">
+              <th className="section-label min-w-[8rem] px-4 py-3 text-left font-medium whitespace-nowrap">
                 Статус
               </th>
-              <th className="section-label px-4 py-3 text-right font-medium">
+              <th className="section-label min-w-[4.5rem] px-4 py-3 text-right font-medium whitespace-nowrap">
                 Действия
               </th>
             </tr>
@@ -630,6 +631,7 @@ export function WorkflowList() {
             )}
           </tbody>
         </table>
+        </div>
         <ListPagination
           page={zapsSafePage}
           pageSize={ZAPS_PAGE_SIZE}
