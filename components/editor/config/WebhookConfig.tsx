@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Clipboard } from "lucide-react";
 import { toast } from "sonner";
 import {
+  LIMITS,
   webhookConfigSchema,
   type WebhookConfigInput,
 } from "@/lib/validations";
@@ -81,7 +82,7 @@ export function WebhookConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <div className="space-y-2">
-        <Label>Webhook URL</Label>
+        <Label>Адрес webhook</Label>
         <div className="flex gap-2">
           <Input readOnly value={url} className="font-mono text-xs" />
           <Button
@@ -99,12 +100,9 @@ export function WebhookConfig({
       </div>
       <Alert>
         <AlertDescription className="text-xs text-muted-foreground">
-          Воркфлоу должен быть <strong>опубликован</strong>. Тело запроса (JSON,
-          форма или текст) попадёт в данные триггера. Воркер обрабатывает очередь
-          — без него запуск зависнет в очереди. Если задан секрет ниже, заголовок
-          обязателен (регистр не важен):{" "}
-          <code className="rounded bg-muted px-1">X-Webhook-Secret</code>.
-          Пример:
+          Опубликуйте воркфлоу и держите воркер включённым. Данные из запроса
+          попадут в триггер. Если есть секрет — добавьте заголовок{" "}
+          <code className="rounded bg-muted px-1">X-Webhook-Secret</code>. Пример:
           <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-2 font-mono text-[11px]">
             {`curl -X ${values.method} "${url}" \\
 ${curlSecret}  -H "Content-Type: application/json" \\
@@ -136,6 +134,7 @@ ${curlSecret}  -H "Content-Type: application/json" \\
         <Label>Секрет (опционально)</Label>
         <Input
           placeholder="Тот же текст в заголовке X-Webhook-Secret"
+          maxLength={LIMITS.webhookSecret}
           {...register("secret")}
         />
       </div>

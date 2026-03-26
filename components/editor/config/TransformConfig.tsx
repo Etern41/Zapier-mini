@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   transformConfigSchema,
   type TransformConfigInput,
 } from "@/lib/validations";
@@ -96,28 +97,21 @@ export function TransformConfig({
   const op: TransformConfigInput["operation"] = values.operation;
 
   const opHint: Record<TransformConfigInput["operation"], string> = {
-    parse_json:
-      "Строка JSON → объект. Во входе можно использовать подстановки {{id.поле}} (предпросмотр без данных шага).",
-    extract_field:
-      "Берёт одно поле из объекта по пути ниже (как data.user.email).",
-    map_array:
-      "Для каждого элемента массива вычисляет выражение (item — текущий элемент).",
-    filter_array:
-      "Оставляет элементы массива, для которых условие истинно (JavaScript).",
-    format_date:
-      "Парсит дату из входа и форматирует (шаблон как dd.MM.yyyy HH:mm).",
-    math:
-      "Подставляет числа из {{поля}} и считает выражение (осторожно с делением на ноль).",
+    parse_json: "Текст JSON превращается в данные. Допускаются подстановки {{id.поле}}.",
+    extract_field: "Одно поле из объекта по пути (например data.user.email).",
+    map_array: "Для каждого элемента массива — выражение с item.",
+    filter_array: "Оставляет элементы, для которых условие выполняется.",
+    format_date: "Дата из входа в нужном виде (например dd.MM.yyyy HH:mm).",
+    math: "Числа из подстановок и простое выражение.",
   };
 
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs leading-relaxed">
-          Шаг работает <strong>после</strong> триггера и предыдущих действий. В
-          поле «Вход» пишите JSON/текст или{" "}
-          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code> —
-          предпросмотр ниже считает шаблон без реального контекста запуска.
+        <AlertDescription className="text-xs text-muted-foreground">
+          Выполняется после предыдущих шагов. В «Вход» — JSON, текст или{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code>.
+          Предпросмотр без данных реального запуска.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
@@ -149,19 +143,28 @@ export function TransformConfig({
         <Textarea
           placeholder="{{предыдущий_шаг.поле}}"
           rows={4}
+          maxLength={LIMITS.transformInput}
           {...register("input")}
         />
       </div>
       {op === "extract_field" ? (
         <div className="space-y-2">
           <Label>Путь к полю</Label>
-          <Input placeholder="data.user.email" {...register("fieldPath")} />
+          <Input
+            placeholder="data.user.email"
+            maxLength={LIMITS.transformExpr}
+            {...register("fieldPath")}
+          />
         </div>
       ) : null}
       {op === "map_array" ? (
         <div className="space-y-2">
           <Label>Выражение</Label>
-          <Input placeholder="item.name" {...register("mapExpr")} />
+          <Input
+            placeholder="item.name"
+            maxLength={LIMITS.transformExpr}
+            {...register("mapExpr")}
+          />
         </div>
       ) : null}
       {op === "filter_array" ? (
@@ -169,6 +172,7 @@ export function TransformConfig({
           <Label>Условие</Label>
           <Input
             placeholder="item.active === true"
+            maxLength={LIMITS.transformExpr}
             {...register("filterExpr")}
           />
         </div>
@@ -176,7 +180,11 @@ export function TransformConfig({
       {op === "format_date" ? (
         <div className="space-y-2">
           <Label>Формат</Label>
-          <Input placeholder="dd.MM.yyyy HH:mm" {...register("dateFormat")} />
+          <Input
+            placeholder="dd.MM.yyyy HH:mm"
+            maxLength={LIMITS.transformExpr}
+            {...register("dateFormat")}
+          />
         </div>
       ) : null}
       {op === "math" ? (
@@ -184,6 +192,7 @@ export function TransformConfig({
           <Label>Выражение</Label>
           <Input
             placeholder="{{value}} * 100 / {{total}}"
+            maxLength={LIMITS.transformExpr}
             {...register("mathExpr")}
           />
         </div>

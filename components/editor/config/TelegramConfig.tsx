@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   telegramConfigSchema,
   type TelegramConfigInput,
 } from "@/lib/validations";
@@ -78,13 +79,18 @@ export function TelegramConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs">
-          Используйте {"{{nodeId.field}}"} для данных из предыдущих шагов
+        <AlertDescription className="text-xs text-muted-foreground">
+          В тексте сообщения можно писать{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code>.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
-        <Label>Bot Token</Label>
-        <Input type="password" {...register("botToken")} />
+        <Label>Токен бота</Label>
+        <Input
+          type="password"
+          maxLength={LIMITS.telegramToken}
+          {...register("botToken")}
+        />
         <a
           href="https://core.telegram.org/bots/tutorial"
           target="_blank"
@@ -95,8 +101,8 @@ export function TelegramConfig({
         </a>
       </div>
       <div className="space-y-2">
-        <Label>Chat ID</Label>
-        <Input {...register("chatId")} />
+        <Label>ID чата</Label>
+        <Input maxLength={LIMITS.telegramChatId} {...register("chatId")} />
         <a
           href="https://t.me/userinfobot"
           target="_blank"
@@ -107,14 +113,18 @@ export function TelegramConfig({
         </a>
       </div>
       <div className="space-y-2">
-        <Label>Message</Label>
-        <Textarea maxLength={4096} rows={6} {...register("message")} />
+        <Label>Сообщение</Label>
+        <Textarea
+          maxLength={LIMITS.telegramMessage}
+          rows={6}
+          {...register("message")}
+        />
         <p className="text-xs text-muted-foreground">
-          {values.message?.length ?? 0}/4096
+          {values.message?.length ?? 0}/{LIMITS.telegramMessage}
         </p>
       </div>
       <div className="space-y-2">
-        <Label>Parse mode</Label>
+        <Label>Разметка</Label>
         <Select
           value={values.parseMode}
           onValueChange={(v) =>

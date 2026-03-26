@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   httpActionConfigSchema,
   type HttpActionConfigInput,
 } from "@/lib/validations";
@@ -84,14 +85,10 @@ export function HttpActionConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs leading-relaxed">
-          <strong>Как пользоваться:</strong> укажите реальный URL (не заглушку).
-          В URL, заголовках и теле можно писать{" "}
-          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code> —
-          id узла виден на канвасе или в панели шага; поля — из выхода предыдущих
-          шагов (например <code className="rounded bg-muted px-1">body</code> у
-          webhook). После сохранения опубликуйте воркфлоу и убедитесь, что воркер
-          запущен.
+        <AlertDescription className="text-xs text-muted-foreground">
+          В ссылке, заголовках и теле можно писать{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code> — id
+          узла на схеме, поля из предыдущих шагов. Нужны публикация и воркер.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
@@ -120,6 +117,7 @@ export function HttpActionConfig({
         <Label>URL</Label>
         <Input
           placeholder="https://api.example.com/endpoint"
+          maxLength={LIMITS.httpUrl}
           {...register("url")}
         />
       </div>
@@ -127,8 +125,16 @@ export function HttpActionConfig({
         <Label>Заголовки</Label>
         {fields.map((f, i) => (
           <div key={f.id} className="flex gap-2">
-            <Input placeholder="Имя" {...register(`headers.${i}.key`)} />
-            <Input placeholder="Значение" {...register(`headers.${i}.value`)} />
+            <Input
+              placeholder="Имя"
+              maxLength={LIMITS.httpHeaderKey}
+              {...register(`headers.${i}.key`)}
+            />
+            <Input
+              placeholder="Значение"
+              maxLength={LIMITS.httpHeaderValue}
+              {...register(`headers.${i}.value`)}
+            />
             <Button type="button" variant="outline" onClick={() => remove(i)}>
               ×
             </Button>
@@ -138,6 +144,7 @@ export function HttpActionConfig({
           type="button"
           variant="outline"
           size="sm"
+          disabled={fields.length >= LIMITS.httpHeadersMax}
           onClick={() => append({ key: "", value: "" })}
         >
           + Добавить заголовок
@@ -150,6 +157,7 @@ export function HttpActionConfig({
             className="font-mono text-xs"
             placeholder='{"key": "value"}'
             rows={6}
+            maxLength={LIMITS.httpBody}
             {...register("body")}
           />
         </div>
@@ -177,7 +185,11 @@ export function HttpActionConfig({
       {values.authType !== "none" ? (
         <div className="space-y-2">
           <Label>Токен / логин:пароль</Label>
-          <Input type="password" {...register("authValue")} />
+          <Input
+            type="password"
+            maxLength={LIMITS.httpAuthValue}
+            {...register("authValue")}
+          />
         </div>
       ) : null}
       {Object.keys(formState.errors).length > 0 ? (

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   emailActionConfigSchema,
   type EmailActionConfigInput,
 } from "@/lib/validations";
@@ -60,31 +61,41 @@ export function EmailActionConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs">
-          Используйте {"{{nodeId.field}}"} для данных из предыдущих шагов
+        <AlertDescription className="text-xs text-muted-foreground">
+          В полях можно писать{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code> —
+          данные из предыдущих шагов.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
-        <Label>To</Label>
-        <Input type="email" {...register("to")} />
+        <Label>Кому</Label>
+        <Input
+          type="email"
+          maxLength={LIMITS.email}
+          {...register("to")}
+        />
       </div>
       <div className="space-y-2">
-        <Label>Subject</Label>
-        <Input maxLength={200} {...register("subject")} />
+        <Label>Тема</Label>
+        <Input maxLength={LIMITS.emailSubject} {...register("subject")} />
         <p className="text-xs text-muted-foreground">
-          {values.subject?.length ?? 0}/200
+          {values.subject?.length ?? 0}/{LIMITS.emailSubject}
         </p>
       </div>
       <div className="space-y-2">
-        <Label>Body</Label>
-        <Textarea maxLength={5000} rows={8} {...register("body")} />
+        <Label>Текст письма</Label>
+        <Textarea
+          maxLength={LIMITS.emailBody}
+          rows={8}
+          {...register("body")}
+        />
         <p className="text-xs text-muted-foreground">
-          {values.body?.length ?? 0}/5000
+          {values.body?.length ?? 0}/{LIMITS.emailBody}
         </p>
       </div>
       <div className="space-y-2">
-        <Label>From name</Label>
-        <Input maxLength={100} {...register("fromName")} />
+        <Label>Имя отправителя (необязательно)</Label>
+        <Input maxLength={LIMITS.fromName} {...register("fromName")} />
       </div>
       {Object.keys(formState.errors).length > 0 ? (
         <p className="text-xs text-destructive">Проверьте поля</p>

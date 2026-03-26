@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   scheduleConfigSchema,
   type ScheduleConfigInput,
 } from "@/lib/validations";
@@ -119,12 +120,9 @@ export function ScheduleConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs leading-relaxed">
-          Расписание ставит <strong>фоновый воркер</strong> (команда{" "}
-          <code className="rounded bg-muted px-1">npm run worker</code>). Воркфлоу
-          должен быть <strong>опубликован</strong> — иначе cron не регистрируется.
-          Время в cron считается в <strong>выбранном часовом поясе</strong> (не в
-          локальном времени сервера).
+        <AlertDescription className="text-xs text-muted-foreground">
+          Нужен запущенный воркер и опубликованный воркфлоу. Время срабатывания — в
+          выбранном поясе.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
@@ -153,7 +151,11 @@ export function ScheduleConfig({
       {values.frequency === "custom" ? (
         <div className="space-y-2">
           <Label>Cron выражение</Label>
-          <Input placeholder="0 * * * *" {...register("cronCustom")} />
+          <Input
+            placeholder="0 * * * *"
+            maxLength={LIMITS.cronExpr}
+            {...register("cronCustom")}
+          />
           <a
             href="https://crontab.guru"
             target="_blank"

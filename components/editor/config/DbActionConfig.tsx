@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   dbActionConfigSchema,
   type DbActionConfigInput,
 } from "@/lib/validations";
@@ -71,18 +72,16 @@ export function DbActionConfig({
         <AlertTriangle className="size-4 text-warning" />
         <AlertTitle className="text-warning-foreground">Внимание</AlertTitle>
         <AlertDescription className="text-xs text-warning-foreground">
-          Выполняется настоящий SQL к той же БД, что и у приложения. INSERT/UPDATE/
-          DELETE необратимы — проверяйте запросы отдельно.
+          Запрос идёт в ту же базу, что и у приложения. Изменения и удаления
+          необратимы — проверьте SQL отдельно.
         </AlertDescription>
       </Alert>
       <Alert>
-        <AlertDescription className="text-xs leading-relaxed">
-          Подключение — из <code className="rounded bg-muted px-1">DATABASE_URL</code>
-          . Имена таблиц как в Prisma (часто в нижнем регистре:{" "}
-          <code className="rounded bg-muted px-1">workflow</code>,{" "}
-          <code className="rounded bg-muted px-1">workflow_run</code> и т.д.).
+        <AlertDescription className="text-xs text-muted-foreground">
           Подстановки:{" "}
           <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code>.
+          Имена таблиц как в схеме БД (часто вроде{" "}
+          <code className="rounded bg-muted px-1">workflow_run</code>).
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
@@ -108,13 +107,17 @@ export function DbActionConfig({
       </div>
       <div className="space-y-2">
         <Label>Таблица (для справки / валидации)</Label>
-        <Input placeholder="workflow_run" {...register("table")} />
+        <Input
+          placeholder="workflow_run"
+          maxLength={LIMITS.dbTable}
+          {...register("table")}
+        />
       </div>
       <div className="space-y-2">
         <Label>SQL-запрос</Label>
         <Textarea
           className="font-mono text-xs"
-          maxLength={2000}
+          maxLength={LIMITS.dbQuery}
           rows={6}
           placeholder={"SELECT * FROM users WHERE id = '{{trigger.id}}'"}
           {...register("query")}

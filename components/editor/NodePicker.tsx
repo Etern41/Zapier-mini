@@ -29,7 +29,7 @@ const triggerOptions: {
     icon: Webhook,
     name: "Webhook",
     desc: "Запуск по HTTP-запросу",
-    hint: "Нужны опубликованный воркфлоу, воркер и корректный NEXT_PUBLIC_APP_URL.",
+    hint: "Нужны опубликованный воркфлоу, воркер и верный публичный адрес сайта.",
   },
   {
     key: "schedule",
@@ -66,7 +66,7 @@ const actionOptions: {
     icon: Mail,
     name: "Email",
     desc: "Отправка письма",
-    hint: "SMTP из .env; текст и тема поддерживают {{id_узла.поле}}.",
+    hint: "Почта настраивается в окружении сервера; в теме и тексте — {{id_узла.поле}}.",
   },
   {
     key: "telegram",
@@ -80,7 +80,7 @@ const actionOptions: {
     icon: Database,
     name: "База данных",
     desc: "SQL-запрос",
-    hint: "Тот же DATABASE_URL, что у приложения; только осознанные запросы.",
+    hint: "Та же база, что у приложения; только осознанные запросы.",
   },
   {
     key: "transform",

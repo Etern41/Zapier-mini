@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  LIMITS,
   emailTriggerConfigSchema,
   emailTriggerConfigPartialSchema,
   type EmailTriggerPartialFormValues,
@@ -59,7 +60,13 @@ export function EmailTriggerConfig({
 
   const saveNow = handleSubmit(async (data) => {
     const full = emailTriggerConfigSchema.safeParse(data);
-    if (!full.success) return;
+    if (!full.success) {
+      const first = full.error.flatten().fieldErrors;
+      const msg =
+        Object.values(first).flat()[0] ?? "Проверьте поля и сохраните снова";
+      toast.error(msg);
+      return;
+    }
     const ok = await patchNode(nodeId, { config: full.data });
     if (!ok) {
       toast.error("Не удалось сохранить настройки");
@@ -71,16 +78,18 @@ export function EmailTriggerConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs leading-relaxed">
-          Воркер опрашивает почту <strong>раз в 5 минут</strong>. Нужен IMAP у
-          провайдера (часто порт 993, SSL). Для Gmail/Yandex используйте{" "}
-          <strong>пароль приложения</strong>, не обычный пароль аккаунта. Воркфлоу
-          должен быть опубликован.
+        <AlertDescription className="text-xs text-muted-foreground">
+          Почта проверяется раз в 5 минут. Нужен IMAP и, у крупных почт, пароль
+          приложения. Воркфлоу должен быть опубликован.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
         <Label>Сервер IMAP</Label>
-        <Input placeholder="imap.gmail.com" {...register("imapHost")} />
+        <Input
+          placeholder="imap.gmail.com"
+          maxLength={LIMITS.imapHost}
+          {...register("imapHost")}
+        />
       </div>
       <div className="space-y-2">
         <Label>Порт IMAP</Label>
@@ -88,16 +97,25 @@ export function EmailTriggerConfig({
       </div>
       <div className="space-y-2">
         <Label>Адрес почты</Label>
-        <Input type="email" {...register("email")} />
+        <Input
+          type="email"
+          maxLength={LIMITS.email}
+          {...register("email")}
+        />
       </div>
       <div className="space-y-2">
         <Label>Пароль или пароль приложения</Label>
-        <Input type="password" {...register("password")} />
+        <Input
+          type="password"
+          maxLength={LIMITS.imapPassword}
+          {...register("password")}
+        />
       </div>
       <div className="space-y-2">
         <Label>Фильтр по теме (необязательно)</Label>
         <Input
           placeholder="Только письма, где тема содержит эту строку"
+          maxLength={LIMITS.filterSubject}
           {...register("filterSubject")}
         />
       </div>
