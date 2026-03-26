@@ -1,14 +1,8 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Zap, MoreVertical } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export type TriggerNodeData = {
@@ -24,6 +18,19 @@ export type TriggerNodeData = {
 function TriggerNodeInner({ data, selected }: NodeProps) {
   const d = data as TriggerNodeData;
   const stepN = d.stepNumber ?? 1;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   return (
     <div
@@ -39,6 +46,7 @@ function TriggerNodeInner({ data, selected }: NodeProps) {
         className="relative z-0 cursor-pointer p-4"
         onClick={(e) => {
           if ((e.target as HTMLElement).closest(".react-flow__handle")) return;
+          if ((e.target as HTMLElement).closest("[data-node-menu]")) return;
           d.onSelect();
         }}
         onKeyDown={(e) => {
@@ -55,46 +63,60 @@ function TriggerNodeInner({ data, selected }: NodeProps) {
             {stepN}
           </span>
           <div
+            ref={menuRef}
+            data-node-menu=""
             className={cn(
-              "opacity-0 transition-opacity group-hover:opacity-100",
-              selected && "opacity-100"
+              "relative opacity-0 transition-opacity group-hover:opacity-100",
+              (selected || menuOpen) && "opacity-100"
             )}
           >
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={(e) => e.stopPropagation()}
-                aria-label="Меню узла"
-              >
-                <MoreVertical className="size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                side="bottom"
-                sideOffset={6}
-                className="z-[200]"
-              >
-                <DropdownMenuItem
+            <button
+              type="button"
+              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Меню узла"
+              onPointerDown={(e) => {
+                // Must stop BOTH to prevent React Flow from capturing the event
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((v) => !v);
+              }}
+            >
+              <MoreVertical className="size-4" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-8 z-[200] min-w-[140px] rounded-lg border border-border bg-popover p-1 shadow-md ring-1 ring-foreground/10">
+                <button
+                  type="button"
+                  className="flex w-full items-center rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-accent"
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setMenuOpen(false);
                     d.onSelect();
                   }}
                 >
                   Настроить
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setMenuOpen(false);
                     d.onDelete();
                   }}
                 >
                   Удалить
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
         <div className="flex flex-wrap items-center gap-2 pr-16">
           <Zap className="size-4 shrink-0 text-[#FF4A00]" />
           <span className="rounded-full border border-[#FF4A00] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#FF4A00]">
@@ -104,17 +126,10 @@ function TriggerNodeInner({ data, selected }: NodeProps) {
         <p className="mt-3 text-sm font-semibold text-foreground">
           {d.label || "Триггер"}
         </p>
-        <p
-          className={cn(
-            "mt-1 text-xs leading-snug",
-            d.configured ? "text-muted-foreground" : "text-muted-foreground"
-          )}
-        >
-          {d.configured
-            ? d.summary
-            : "Выберите событие, которое запускает Zap"}
+        <p className="mt-1 text-xs leading-snug text-muted-foreground">
+          {d.configured ? d.summary : "Выберите событие, которое запускает Zap"}
         </p>
-        {d.configured ? (
+        {d.configured && (
           <div className="mt-2 flex items-center gap-1.5">
             <span
               className={cn(
@@ -125,12 +140,12 @@ function TriggerNodeInner({ data, selected }: NodeProps) {
               )}
             />
           </div>
-        ) : null}
+        )}
       </div>
       <Handle
         type="source"
         position={Position.Bottom}
-        title="Потяните к точке входа следующего шага или щёлкните, затем по верхней точке действия"
+        title="Потяните к точке входа следующего шага"
         className="!pointer-events-auto !z-30 !h-4 !w-4 !border-2 !border-[hsl(var(--brand-purple))] !bg-white"
       />
     </div>
