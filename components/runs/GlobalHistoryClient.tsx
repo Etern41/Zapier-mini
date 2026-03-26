@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ListPagination } from "@/components/ui/list-pagination";
 import { subDays, isAfter } from "date-fns";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -14,9 +15,12 @@ import {
 import { RunsTable, type RunRow } from "@/components/runs/RunsTable";
 import { runStatusLabelRu } from "@/lib/run-labels";
 
+const PAGE_SIZE = 20;
+
 export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
+  const [listPage, setListPage] = useState(1);
   const [wf, setWf] = useState<string>("all");
   const [range, setRange] = useState<"all" | "7d" | "24h">("all");
   const [status, setStatus] = useState<
@@ -61,22 +65,34 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
       if (wf !== "all" && r.workflow?.id !== wf) return false;
       if (qq) {
         const name = r.workflow?.name?.toLowerCase() ?? "";
-        if (!name.includes(qq) && !r.id.toLowerCase().includes(qq))
-          return false;
+        if (!name.includes(qq)) return false;
       }
       return true;
     });
   }, [runs, debouncedQ, wf, range, status]);
 
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedQ, wf, range, status]);
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, listPage), totalPages);
+  const pageSlice = useMemo(
+    () =>
+      filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filtered, safePage]
+  );
+
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-6">
-      <h1 className="page-title">История запусков</h1>
+      <h1 className="sr-only">История запусков</h1>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[200px] flex-1 max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Поиск по названию воркфлоу"
+            placeholder="По названию воркфлоу"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             aria-label="Поиск по истории"
@@ -130,7 +146,18 @@ export function GlobalHistoryClient({ runs }: { runs: RunRow[] }) {
           </SelectContent>
         </Select>
       </div>
-      <RunsTable runs={filtered} showWorkflow />
+      <RunsTable
+        runs={pageSlice}
+        showWorkflow
+        footer={
+          <ListPagination
+            page={safePage}
+            pageSize={PAGE_SIZE}
+            total={totalFiltered}
+            onPageChange={setListPage}
+          />
+        }
+      />
     </div>
   );
 }

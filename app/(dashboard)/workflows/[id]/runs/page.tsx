@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { RunsTable } from "@/components/runs/RunsTable";
+import { WorkflowRunsClient } from "@/components/runs/WorkflowRunsClient";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -59,7 +59,7 @@ export default async function WorkflowRunsPage({
           </span>
         </nav>
       </div>
-      <RunsTable runs={serialized} workflowId={id} />
+      <WorkflowRunsClient runs={serialized} workflowId={id} />
     </div>
   );
 }

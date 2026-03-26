@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ListPagination } from "@/components/ui/list-pagination";
 import { cn } from "@/lib/utils";
+
+const FAIL_PAGE_SIZE = 10;
 
 export function FailuresTable({
   rows,
@@ -21,6 +24,19 @@ export function FailuresTable({
   }[];
 }) {
   const [busy, setBusy] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / FAIL_PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const slice = useMemo(
+    () => rows.slice((safePage - 1) * FAIL_PAGE_SIZE, safePage * FAIL_PAGE_SIZE),
+    [rows, safePage]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows]);
 
   const retry = async (workflowId: string, runId: string) => {
     setBusy(runId);
@@ -64,7 +80,7 @@ export function FailuresTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {slice.map((r) => (
                 <tr key={r.id} className="border-b border-border last:border-0">
                   <td className="py-2 pr-2 font-medium text-foreground">
                     {r.workflowName}
@@ -114,6 +130,14 @@ export function FailuresTable({
           </table>
         </div>
       )}
+      {rows.length > 0 ? (
+        <ListPagination
+          page={safePage}
+          pageSize={FAIL_PAGE_SIZE}
+          total={total}
+          onPageChange={setPage}
+        />
+      ) : null}
     </div>
   );
 }

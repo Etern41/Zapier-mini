@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,11 +33,13 @@ export function RunsTable({
   runs,
   showWorkflow,
   workflowId: pageWorkflowId,
+  footer,
 }: {
   runs: RunRow[];
   showWorkflow?: boolean;
   /** When rows lack `workflow.id` (per-workflow history page), pass workflow id for «Повторить запуск». */
   workflowId?: string;
+  footer?: ReactNode;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
@@ -243,6 +246,7 @@ export function RunsTable({
           );
         })
       )}
+      {footer}
     </div>
   );
 }

@@ -46,6 +46,7 @@ import {
 import { CreateWorkflowModal } from "@/components/workflows/CreateWorkflowModal";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/relative-time";
+import { ListPagination } from "@/components/ui/list-pagination";
 
 type WfRow = {
   id: string;
@@ -112,6 +113,8 @@ function EmptyZapsIllustration() {
   );
 }
 
+const ZAPS_PAGE_SIZE = 15;
+
 function TableSkeleton() {
   return (
     <div className="space-y-2 p-4">
@@ -139,6 +142,7 @@ export function WorkflowList() {
   const [extraFilter, setExtraFilter] = useState<ExtraFilter>("none");
   const [triggerTypeFilter, setTriggerTypeFilter] =
     useState<TriggerTypeFilter>("all");
+  const [listPage, setListPage] = useState(1);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 280);
@@ -216,6 +220,24 @@ export function WorkflowList() {
     });
   }, [workflows, debouncedSearch, statusFilter, extraFilter, triggerTypeFilter]);
 
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedSearch, statusFilter, extraFilter, triggerTypeFilter]);
+
+  const zapsTotalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / ZAPS_PAGE_SIZE)
+  );
+  const zapsSafePage = Math.min(Math.max(1, listPage), zapsTotalPages);
+  const paginatedWorkflows = useMemo(
+    () =>
+      filtered.slice(
+        (zapsSafePage - 1) * ZAPS_PAGE_SIZE,
+        zapsSafePage * ZAPS_PAGE_SIZE
+      ),
+    [filtered, zapsSafePage]
+  );
+
   const hasActiveFilters =
     debouncedSearch !== "" ||
     statusFilter !== "all" ||
@@ -277,7 +299,7 @@ export function WorkflowList() {
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-auto bg-background p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="page-title">Zaps</h1>
+        <h1 className="sr-only">Zaps</h1>
         <div className="flex items-center gap-2">
           <CreateWorkflowModal />
         </div>
@@ -500,7 +522,7 @@ export function WorkflowList() {
                 </td>
               </tr>
             ) : (
-              filtered.map((w) => {
+              paginatedWorkflows.map((w) => {
                 const Icons = workflowNodeIcons(w.nodes);
                 return (
                   <tr
@@ -608,6 +630,12 @@ export function WorkflowList() {
             )}
           </tbody>
         </table>
+        <ListPagination
+          page={zapsSafePage}
+          pageSize={ZAPS_PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setListPage}
+        />
       </div>
 
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

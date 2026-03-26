@@ -92,7 +92,7 @@ export function AnalyticsView() {
   if (!data || error) {
     return (
       <div className="space-y-6">
-        <h1 className="page-title">Аналитика</h1>
+        <h1 className="sr-only">Аналитика</h1>
         <div className="rounded-lg border border-dashed border-border p-12 text-center">
           <p className="text-sm text-muted-foreground">
             {error ?? "Не удалось загрузить аналитику"}
@@ -116,7 +116,7 @@ export function AnalyticsView() {
 
   return (
     <div className="space-y-6">
-      <h1 className="page-title">Аналитика</h1>
+      <h1 className="sr-only">Аналитика</h1>
       <StatsCards
         totalWorkflows={data.totalWorkflows}
         activeWorkflows={data.activeWorkflows}
