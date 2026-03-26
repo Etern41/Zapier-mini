@@ -54,21 +54,31 @@ export function registerScheduleForWorkflow(
   const cfg = (node.config ?? {}) as {
     frequency?: ScheduleFrequency;
     cronCustom?: string;
+    timezone?: string;
   };
   const expr = cronExpressionFromConfig(cfg);
   if (!expr) return;
 
-  const task = cron.schedule(expr, async () => {
-    try {
-      await enqueueWorkflowRun({
-        workflowId,
-        triggerData: { scheduledAt: new Date().toISOString() },
-        trigger: "schedule",
-      });
-    } catch {
-      // queue may be unavailable
-    }
-  });
+  const timezone =
+    typeof cfg.timezone === "string" && cfg.timezone.trim()
+      ? cfg.timezone.trim()
+      : "UTC";
+
+  const task = cron.schedule(
+    expr,
+    async () => {
+      try {
+        await enqueueWorkflowRun({
+          workflowId,
+          triggerData: { scheduledAt: new Date().toISOString() },
+          trigger: "schedule",
+        });
+      } catch {
+        // queue may be unavailable
+      }
+    },
+    { timezone }
+  );
   task.start();
 
   tasks.set(workflowId, task);

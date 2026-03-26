@@ -72,6 +72,12 @@ export function WebhookConfig({
     onSaved();
   });
 
+  const secretTrim = values.secret?.trim() ?? "";
+  const curlSecret =
+    secretTrim.length > 0
+      ? `  -H "X-Webhook-Secret: ${secretTrim}" \\\n`
+      : "";
+
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <div className="space-y-2">
@@ -93,12 +99,15 @@ export function WebhookConfig({
       </div>
       <Alert>
         <AlertDescription className="text-xs text-muted-foreground">
-          Вызовите URL методом ниже. При необходимости передайте заголовок{" "}
-          <code className="rounded bg-muted px-1">X-Webhook-Secret</code> со
-          значением секрета. Пример:
+          Воркфлоу должен быть <strong>опубликован</strong>. Тело запроса (JSON,
+          форма или текст) попадёт в данные триггера. Воркер обрабатывает очередь
+          — без него запуск зависнет в очереди. Если задан секрет ниже, заголовок
+          обязателен (регистр не важен):{" "}
+          <code className="rounded bg-muted px-1">X-Webhook-Secret</code>.
+          Пример:
           <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-2 font-mono text-[11px]">
             {`curl -X ${values.method} "${url}" \\
-  -H "Content-Type: application/json" \\
+${curlSecret}  -H "Content-Type: application/json" \\
   -d '{"hello":"world"}'`}
           </pre>
         </AlertDescription>
@@ -124,9 +133,9 @@ export function WebhookConfig({
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Secret</Label>
+        <Label>Секрет (опционально)</Label>
         <Input
-          placeholder="Опционально — для верификации подписи"
+          placeholder="Тот же текст в заголовке X-Webhook-Secret"
           {...register("secret")}
         />
       </div>

@@ -71,29 +71,35 @@ export function EmailTriggerConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs">
-          Проверка почты каждые 5 минут
+        <AlertDescription className="text-xs leading-relaxed">
+          Воркер опрашивает почту <strong>раз в 5 минут</strong>. Нужен IMAP у
+          провайдера (часто порт 993, SSL). Для Gmail/Yandex используйте{" "}
+          <strong>пароль приложения</strong>, не обычный пароль аккаунта. Воркфлоу
+          должен быть опубликован.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
-        <Label>IMAP Host</Label>
-        <Input {...register("imapHost")} />
+        <Label>Сервер IMAP</Label>
+        <Input placeholder="imap.gmail.com" {...register("imapHost")} />
       </div>
       <div className="space-y-2">
-        <Label>IMAP Port</Label>
+        <Label>Порт IMAP</Label>
         <Input type="number" {...register("imapPort")} />
       </div>
       <div className="space-y-2">
-        <Label>Email</Label>
+        <Label>Адрес почты</Label>
         <Input type="email" {...register("email")} />
       </div>
       <div className="space-y-2">
-        <Label>Password</Label>
+        <Label>Пароль или пароль приложения</Label>
         <Input type="password" {...register("password")} />
       </div>
       <div className="space-y-2">
-        <Label>Filter subject</Label>
-        <Input placeholder="Опционально" {...register("filterSubject")} />
+        <Label>Фильтр по теме (необязательно)</Label>
+        <Input
+          placeholder="Только письма, где тема содержит эту строку"
+          {...register("filterSubject")}
+        />
       </div>
       {Object.keys(formState.errors).length > 0 ? (
         <p className="text-xs text-destructive">Проверьте поля</p>

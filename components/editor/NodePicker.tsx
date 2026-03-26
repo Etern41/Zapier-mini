@@ -22,24 +22,28 @@ const triggerOptions: {
   icon: typeof Webhook;
   name: string;
   desc: string;
+  hint: string;
 }[] = [
   {
     key: "webhook",
     icon: Webhook,
     name: "Webhook",
     desc: "Запуск по HTTP-запросу",
+    hint: "Нужны опубликованный воркфлоу, воркер и корректный NEXT_PUBLIC_APP_URL.",
   },
   {
     key: "schedule",
     icon: Calendar,
     name: "Расписание",
     desc: "По расписанию (cron)",
+    hint: "Воркфлоу опубликован, воркер запущен; время — в выбранном часовом поясе.",
   },
   {
     key: "email_trigger",
     icon: Mail,
     name: "Email",
     desc: "Входящее письмо (IMAP)",
+    hint: "IMAP у провайдера, пароль приложения (Gmail и т.п.), опрос раз в 5 мин.",
   },
 ];
 
@@ -48,36 +52,42 @@ const actionOptions: {
   icon: typeof Globe;
   name: string;
   desc: string;
+  hint: string;
 }[] = [
   {
     key: "http",
     icon: Globe,
     name: "HTTP-запрос",
     desc: "Вызов внешнего API",
+    hint: "Подстановки {{id_узла.поле}}; URL и тело — как в обычном fetch.",
   },
   {
     key: "email",
     icon: Mail,
     name: "Email",
     desc: "Отправка письма",
+    hint: "SMTP из .env; текст и тема поддерживают {{id_узла.поле}}.",
   },
   {
     key: "telegram",
     icon: Send,
     name: "Telegram",
     desc: "Сообщение в Telegram",
+    hint: "Токен бота и chat_id в настройках шага.",
   },
   {
     key: "db",
     icon: Database,
     name: "База данных",
     desc: "SQL-запрос",
+    hint: "Тот же DATABASE_URL, что у приложения; только осознанные запросы.",
   },
   {
     key: "transform",
     icon: Shuffle,
     name: "Трансформация данных",
     desc: "JSON, поля, массивы",
+    hint: "Между шагами: разбор JSON, поля, массивы, даты, простая математика.",
   },
 ];
 
@@ -94,7 +104,7 @@ export function NodePicker({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[120] max-w-lg">
+      <DialogContent className="z-[120] max-w-xl">
         <DialogHeader>
           <DialogTitle>Добавить шаг</DialogTitle>
         </DialogHeader>
@@ -121,6 +131,9 @@ export function NodePicker({
                   <o.icon className="size-5 text-[#FF4A00]" />
                   <span className="font-medium text-foreground">{o.name}</span>
                   <span className="text-xs text-muted-foreground">{o.desc}</span>
+                  <span className="text-[11px] leading-snug text-muted-foreground/90">
+                    {o.hint}
+                  </span>
                 </button>
               ))}
             </div>
@@ -141,6 +154,9 @@ export function NodePicker({
                   <o.icon className="size-5 text-[hsl(var(--brand-purple))]" />
                   <span className="font-medium text-foreground">{o.name}</span>
                   <span className="text-xs text-muted-foreground">{o.desc}</span>
+                  <span className="text-[11px] leading-snug text-muted-foreground/90">
+                    {o.hint}
+                  </span>
                 </button>
               ))}
             </div>

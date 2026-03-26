@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { safeDebouncedConfig } from "@/lib/editor/debounced-config";
 import { patchNode } from "@/lib/editor/patch-node";
 
@@ -117,6 +118,15 @@ export function ScheduleConfig({
 
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
+      <Alert>
+        <AlertDescription className="text-xs leading-relaxed">
+          Расписание ставит <strong>фоновый воркер</strong> (команда{" "}
+          <code className="rounded bg-muted px-1">npm run worker</code>). Воркфлоу
+          должен быть <strong>опубликован</strong> — иначе cron не регистрируется.
+          Время в cron считается в <strong>выбранном часовом поясе</strong> (не в
+          локальном времени сервера).
+        </AlertDescription>
+      </Alert>
       <div className="space-y-2">
         <Label>Частота</Label>
         <Select
@@ -177,10 +187,15 @@ export function ScheduleConfig({
         </Select>
       </div>
       <p className="text-xs text-muted-foreground">
-        Следующий запуск:{" "}
-        {expr
-          ? `cron ${expr} (${values.timezone})`
-          : "укажите валидное cron"}
+        {expr ? (
+          <>
+            Выражение: <code className="rounded bg-muted px-1">{expr}</code> в
+            поясе <code className="rounded bg-muted px-1">{values.timezone}</code>
+            . Формат: минута час день месяц день_недели (как в crontab).
+          </>
+        ) : (
+          <>Укажите корректное cron (5 полей через пробел).</>
+        )}
       </p>
       {lastRuns.length > 0 ? (
         <div>

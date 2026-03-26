@@ -95,16 +95,33 @@ export function TransformConfig({
 
   const op: TransformConfigInput["operation"] = values.operation;
 
+  const opHint: Record<TransformConfigInput["operation"], string> = {
+    parse_json:
+      "Строка JSON → объект. Во входе можно использовать подстановки {{id.поле}} (предпросмотр без данных шага).",
+    extract_field:
+      "Берёт одно поле из объекта по пути ниже (как data.user.email).",
+    map_array:
+      "Для каждого элемента массива вычисляет выражение (item — текущий элемент).",
+    filter_array:
+      "Оставляет элементы массива, для которых условие истинно (JavaScript).",
+    format_date:
+      "Парсит дату из входа и форматирует (шаблон как dd.MM.yyyy HH:mm).",
+    math:
+      "Подставляет числа из {{поля}} и считает выражение (осторожно с делением на ноль).",
+  };
+
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs">
-          Используйте {"{{предыдущий_шаг.поле}}"} в Input для подстановки
-          (клиентский предпросмотр без контекста).
+        <AlertDescription className="text-xs leading-relaxed">
+          Шаг работает <strong>после</strong> триггера и предыдущих действий. В
+          поле «Вход» пишите JSON/текст или{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code> —
+          предпросмотр ниже считает шаблон без реального контекста запуска.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
-        <Label>Operation</Label>
+        <Label>Операция</Label>
         <Select
           value={values.operation}
           onValueChange={(v) =>
@@ -117,17 +134,18 @@ export function TransformConfig({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="parse_json">Parse JSON</SelectItem>
-            <SelectItem value="extract_field">Extract Field</SelectItem>
-            <SelectItem value="map_array">Map Array</SelectItem>
-            <SelectItem value="filter_array">Filter Array</SelectItem>
-            <SelectItem value="format_date">Format Date</SelectItem>
-            <SelectItem value="math">Math</SelectItem>
+            <SelectItem value="parse_json">Разобрать JSON</SelectItem>
+            <SelectItem value="extract_field">Извлечь поле</SelectItem>
+            <SelectItem value="map_array">Преобразовать массив (map)</SelectItem>
+            <SelectItem value="filter_array">Отфильтровать массив</SelectItem>
+            <SelectItem value="format_date">Формат даты</SelectItem>
+            <SelectItem value="math">Выражение (числа)</SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">{opHint[op]}</p>
       </div>
       <div className="space-y-2">
-        <Label>Input</Label>
+        <Label>Вход (строка или шаблон)</Label>
         <Textarea
           placeholder="{{предыдущий_шаг.поле}}"
           rows={4}
@@ -171,7 +189,7 @@ export function TransformConfig({
         </div>
       ) : null}
       <div>
-        <Label className="text-muted-foreground">Output preview</Label>
+        <Label className="text-muted-foreground">Предпросмотр</Label>
         <div className="mt-1 rounded-md bg-muted p-2 font-mono text-xs">
           {preview || "—"}
         </div>

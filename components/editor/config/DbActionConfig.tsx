@@ -71,17 +71,22 @@ export function DbActionConfig({
         <AlertTriangle className="size-4 text-warning" />
         <AlertTitle className="text-warning-foreground">Внимание</AlertTitle>
         <AlertDescription className="text-xs text-warning-foreground">
-          Осторожно: выполняется реальный SQL запрос
+          Выполняется настоящий SQL к той же БД, что и у приложения. INSERT/UPDATE/
+          DELETE необратимы — проверяйте запросы отдельно.
         </AlertDescription>
       </Alert>
       <Alert>
-        <AlertDescription className="text-xs">
-          Используется DATABASE_URL приложения. Используйте{" "}
-          {"{{nodeId.field}}"} для подстановки.
+        <AlertDescription className="text-xs leading-relaxed">
+          Подключение — из <code className="rounded bg-muted px-1">DATABASE_URL</code>
+          . Имена таблиц как в Prisma (часто в нижнем регистре:{" "}
+          <code className="rounded bg-muted px-1">workflow</code>,{" "}
+          <code className="rounded bg-muted px-1">workflow_run</code> и т.д.).
+          Подстановки:{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code>.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
-        <Label>Operation</Label>
+        <Label>Операция</Label>
         <Select
           value={values.operation}
           onValueChange={(v) =>
@@ -102,11 +107,11 @@ export function DbActionConfig({
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Table</Label>
-        <Input placeholder="users" {...register("table")} />
+        <Label>Таблица (для справки / валидации)</Label>
+        <Input placeholder="workflow_run" {...register("table")} />
       </div>
       <div className="space-y-2">
-        <Label>Query</Label>
+        <Label>SQL-запрос</Label>
         <Textarea
           className="font-mono text-xs"
           maxLength={2000}

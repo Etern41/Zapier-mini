@@ -84,12 +84,18 @@ export function HttpActionConfig({
   return (
     <form className="space-y-4" onSubmit={(e) => void saveNow(e)}>
       <Alert>
-        <AlertDescription className="text-xs">
-          Используйте {"{{nodeId.field}}"} для данных из предыдущих шагов
+        <AlertDescription className="text-xs leading-relaxed">
+          <strong>Как пользоваться:</strong> укажите реальный URL (не заглушку).
+          В URL, заголовках и теле можно писать{" "}
+          <code className="rounded bg-muted px-1">{"{{id_узла.поле}}"}</code> —
+          id узла виден на канвасе или в панели шага; поля — из выхода предыдущих
+          шагов (например <code className="rounded bg-muted px-1">body</code> у
+          webhook). После сохранения опубликуйте воркфлоу и убедитесь, что воркер
+          запущен.
         </AlertDescription>
       </Alert>
       <div className="space-y-2">
-        <Label>Method</Label>
+        <Label>Метод</Label>
         <Select
           value={values.method}
           onValueChange={(v) =>
@@ -118,11 +124,11 @@ export function HttpActionConfig({
         />
       </div>
       <div className="space-y-2">
-        <Label>Headers</Label>
+        <Label>Заголовки</Label>
         {fields.map((f, i) => (
           <div key={f.id} className="flex gap-2">
-            <Input placeholder="key" {...register(`headers.${i}.key`)} />
-            <Input placeholder="value" {...register(`headers.${i}.value`)} />
+            <Input placeholder="Имя" {...register(`headers.${i}.key`)} />
+            <Input placeholder="Значение" {...register(`headers.${i}.value`)} />
             <Button type="button" variant="outline" onClick={() => remove(i)}>
               ×
             </Button>
@@ -139,7 +145,7 @@ export function HttpActionConfig({
       </div>
       {showBody ? (
         <div className="space-y-2">
-          <Label>Body</Label>
+          <Label>Тело запроса</Label>
           <Textarea
             className="font-mono text-xs"
             placeholder='{"key": "value"}'
@@ -149,7 +155,7 @@ export function HttpActionConfig({
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label>Auth</Label>
+        <Label>Авторизация</Label>
         <Select
           value={values.authType}
           onValueChange={(v) =>
@@ -170,7 +176,7 @@ export function HttpActionConfig({
       </div>
       {values.authType !== "none" ? (
         <div className="space-y-2">
-          <Label>Auth value</Label>
+          <Label>Токен / логин:пароль</Label>
           <Input type="password" {...register("authValue")} />
         </div>
       ) : null}
